@@ -16,6 +16,6 @@
 
   <ItemGroup>
     <PackageReference Include="Nuke.Common" Version="7.0.2" />
-    <PackageReference Include="EncySoftware.BuildSystem" Version="1.0.1-rc.2"/>
+    <PackageReference Include="EncySoftware.BuildSystem" Version="1.0.1-rc.3"/>
   </ItemGroup>
 </Project>
