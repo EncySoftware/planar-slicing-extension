@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>CuraEngineParametersLibrary</Title>
+    <Description>CuraEngineParametersLibrary</Description>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS8603</NoWarn>
+    <OutDir>../CuraEngineConnection/build/$(Configuration)</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NCalcSync" Version="3.12.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>CuraEngineNetWrapper</Title>
+    <Description>CuraEngineNetWrapper</Description>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS8603</NoWarn>
+    <OutDir>../CuraEngineConnection/build/$(Configuration)</OutDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(OutDir)\CuraConnectionInterface.dll" />
+  </ItemGroup>
+</Project>

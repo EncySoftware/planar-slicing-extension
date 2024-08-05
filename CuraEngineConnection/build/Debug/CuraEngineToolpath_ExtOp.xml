@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<SCCollection>
+	<SCInclude>$(SUPPLEMENT_FOLDER)\Operations\AbstractExtOp.xml</SCInclude>
+
+	<SCNameSpace ID="OperationRegistrator">
+		<SCType ID="RegTCuraEngineToolpathOp" type="TRegisterOperationRecord" Enabled="True">
+			<TypeName DefaultValue="TCuraEngineToolpathOp"/>
+		</SCType>
+	</SCNameSpace>
+    
+
+    <SCType ID="TCuraEngineToolpathOp" Caption="Planar slicing" type="TSTMillOp" Enabled = "True">
+        <GUID DefaultValue="{443DC844-5214-47F9-9C1F-08783A332C4B}"/>
+        <ContainerID DefaultValue="{E69F4DE4-0600-4369-8738-B3608AC7AB46}"/>
+		<SolverID DefaultValue="CuraEngineToolpath"/>
+
+        <Name DefaultValue="Planar slicing"/>
+        <Comment DefaultValue="Planar slicing"/>
+        <Icon DefaultValue="UltimakerCuraPlugin_icon.png"/>
+        <Image DefaultValue="$(SUPPLEMENT_FOLDER)\Operations\MillOperations\Images\PocketCladding.png"/>
+		<Group DefaultValue="Additive"/>
+        <MultiGroup>
+            <SCType ID="Additive" OrderInGroup="100" type="TLinkToParentMultiGroup"/>
+        </MultiGroup>
+		<OperationGroup DefaultValue="Additive"/>
+		<OperationConfiguration>
+			<Conf_Free DefaultValue="False"/>
+			<Conf_2D DefaultValue="False"/>
+			<Conf_25D DefaultValue="False"/>
+			<Conf_3D DefaultValue="False"/>
+			<Conf_3AD DefaultValue="False"/>
+			<Conf_4D DefaultValue="False"/>
+			<Conf_5D DefaultValue="False"/>
+			<Conf_Clad3D DefaultValue="True"/>
+		</OperationConfiguration>
+
+		<CustomizedMachiningApplications>
+			<SupportedApplications>
+				<MillTool DefaultValue="false"/>
+				<LatheCutter DefaultValue="false"/>
+				<JetCutter DefaultValue="false"/>
+				<Punch DefaultValue="false"/>
+				<Wire DefaultValue="false"/>
+				<Cutter6D DefaultValue="false"/>
+				<Welder DefaultValue="false"/>
+				<AdditiveTool DefaultValue="true"/>
+				<HeatTreatment DefaultValue="false"/>
+				<Painter DefaultValue="false"/>
+			</SupportedApplications>
+		</CustomizedMachiningApplications>
+		<Simulation>
+			<CheckCollisionsWithPart DefaultValue="False"/>
+		</Simulation>
+		<CheckedGeometry>
+			<CheckPartPlace Visible="False"/>
+			<CheckWorkpieceGroupPlaceHolder Visible="False"/>
+		</CheckedGeometry>	
+		<Stock Visible="False"/>
+		<!-- 'Strategy' -->
+		<SCType ID="MFTabsInfo" Type="ComplexType" Enabled="False" ReadOnly="True">
+			<SCType ID="Common" Type="TMFTabInfo">
+				<CustomFormName DefaultValue="ExtOpParametersForm"/>
+			</SCType>
+		</SCType>
+		<!-- 'Strategy' -->
+		<SCType ID="AxesBrakeUsingMode" Caption="Axes brakes using mode" type="Enumerated" DefaultValue="DoNotUse">
+			<SCType ID="DoNotUse" Caption="Do not use brakes" type="None"/>
+			<SCType ID="Always" Caption="Use brakes" type="None"/>
+		</SCType>
+		<SCType ID="CuraUserParameterArray" Caption="Array of user parameters"
+			Type="Array"
+			CollectionKeyField="Name"
+			CollectionValueField="Value"
+			Enabled="True">
+			<SCType ID="Parameter"  Caption="[Name]" Type="ComplexType">
+				<SCType ID="Name" Caption="Name" Type="String" DefaultValue=""/>
+				<SCType ID="Value" Caption="Value" Type="CDATAString" DefaultValue=""/>
+			</SCType>		
+		</SCType>
+		<SCType ID="GeneralParameters" Caption="General parameters" Type="ComplexType" Enabled="False" Visible="False">
+			<SCType ID="Manufacturer" Caption="Manufacturer" Type="CDATAString" DefaultValue=""/>
+			<SCType ID="Machine" Caption="Printer" Type="CDATAString" DefaultValue=""/>
+			<SCType ID="Extruder" Caption="Extruder" Type="CDATAString" DefaultValue=""/>
+			<SCType ID="MaterialBrand" Caption="Material" Type="CDATAString" DefaultValue=""/>
+			<SCType ID="Material" Caption="Material" Type="CDATAString" DefaultValue=""/>
+			<SCType ID="Variant" Caption="Material" Type="CDATAString" DefaultValue=""/>
+			<SCType ID="Profile" Caption="Profile" Type="CDATAString" DefaultValue=""/>
+			<SCType ID="Quality" Caption="Resolution" Type="CDATAString" DefaultValue=""/>
+			<SCType ID="ShowCustomParameters" Caption="Show custom parameters" type="boolean"/>
+			<SCType ID="SettingVisibility" Caption="Setting visibility" type="CDATAString" DefaultValue=""/>
+			<SCType ID="AutoToolParameterization" Caption="Auto tool parameterization" type="boolean" DefaultValue="True"/>
+		</SCType>
+		<ConditionsSection>
+			<EffectiveFeeds DefaultValue="WorkingRetractEngage"/>
+			<Feeds>
+				<WorkFeed Enabled="False"/>
+				<EngageFeed Enabled="False"/>
+				<RetractFeed Enabled="False"/>
+				<NextFeed Enabled="False"/>
+				<FirstFeed Enabled="False"/>
+				<FinishFeed Enabled="False"/>
+				<PlungeFeed Enabled="False"/>
+				<ReturnFeed Enabled="False"/>
+				<ApproachFeed Enabled="False"/>
+				<ApproachFromSafeFeed Enabled="False"/>
+				<ReturnToSafeFeed Enabled="False"/>
+				<TransitionOnSafeFeed Enabled="False"/>
+				<LongTransitionFeed Visible="False"/>
+			</Feeds>
+		</ConditionsSection>
+		<Simulation>
+			<CheckCollisionsWithPart DefaultValue="False"/>
+			<SimulationType DefaultValue="Additive"/>
+			<CheckForPlunges Visible="False"/>
+		</Simulation>
+		<LinksPlaceHolder Visible="False"/>
+		<LeadsPlaceHolder Visible="False"/>
+		<Toolpath>
+			<Output>
+				<WorksOutput Visible="true" Caption="Output interpolation">
+					<AngularError DefaultValue="0.02"/>		
+					<LinearError Visible="not ([Mode]=[Mode.OldArcs])"/>	
+				</WorksOutput>			
+				<LinksOutput Visible="false"/>			
+			</Output>
+		</Toolpath>
+	</SCType>
+</SCCollection>

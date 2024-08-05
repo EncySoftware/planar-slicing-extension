@@ -1,0 +1,14 @@
+{
+	"vars": {
+		"msbuilder_path": "C:/Windows/Microsoft.NET/Framework/v4.0.30319/MSBuild.exe",
+		"env_bds": "c:/program files (x86)/embarcadero/studio/23.0",
+		"rsvars_path": "c:/program files (x86)/embarcadero/studio/23.0/bin/rsvars.bat"
+	},
+
+	"projects": [
+		"../CuraConnectionInterface/main/.stbuild/CuraConnectionInterfaceProject.json",
+		"../CuraEngineNetWrapper/.stbuild/CuraEngineNetWrapperProject.json",
+		"../CuraEngineParametersLibrary/.stbuild/CuraEngineParametersLibraryProject.json",
+		"../CuraEngineOperation/.stbuild/CuraEngineOperationProject.json"
+	]
+}

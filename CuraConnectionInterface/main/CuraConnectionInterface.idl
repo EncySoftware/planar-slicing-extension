@@ -1,0 +1,140 @@
+#include "IDLDefines.h"
+[
+  uuid(3280DECD-F115-41AB-B7FC-134D41628729),
+  version(1.0),
+  helpstring("CuraConnectionInterface Interface Library")
+]                                         
+library CuraConnectionInterface
+
+begin
+  importlib ("stdole2.tlb");
+  
+  record tagTCE3SPoint begin
+  	field(X, single);
+  	field(Y, single);
+  	field(Z, single);
+  end TCE3SPoint;
+  
+  record tagTCE2SPoint begin
+  	field(X, single);
+  	field(Y, single);
+  end TCE2SPoint;
+
+  [helpstring("Callback interface for performing an action for CuraEngine messages")]
+  interface (ICuraEngineControlProcess, 53DD0B9D-A10F-4A95-9A91-7EE5F1EF6512): IUnknown 
+  begin
+    [helpstring("OnError description
+      @param msg - error message
+      @param isFinished - state of slicing 
+    ")]
+    procedure OnError(in(msg, string));
+
+    [helpstring("OnFinalize description
+      @param msg - final message
+      @param isFinished - state of slicing 
+    ")]
+    procedure OnFinish(in(msg, string));
+
+    [helpstring("OnPrintTimeMaterialEstimates description
+      @param name - name of PrintTimeMaterialEstimates of CuraEngine in string value 
+      @param value - value of PrintTimeMaterialEstimates of CuraEngine in double value 
+    ")]
+    procedure OnPrintTimeMaterialEstimates(in(name, string), in(value, double));
+
+    [helpstring("OnGCode description
+      @param GCode - Generated GCode of CuraEngine in string value 
+    ")]
+    procedure OnGCode(in(GCode, string));
+
+    [helpstring("OnProgress description
+      @param progress - Progress of CuraEngine in double value 
+    ")]
+    procedure OnProgress(in(progress, double));
+
+    procedure OnStartLayersOptimized(
+      in(id, integer),
+      in(height, double),
+      in(thickness, double)      
+    );
+    procedure OnStopLayersOptimized();
+    procedure OnStartPathSegment(in(extruderID, integer), in(point_type, integer));
+    procedure OnStopPathSegment();
+    procedure Add2SPoint(
+      in(p, TCE2SPoint), 
+      in(lineType, integer), 
+      in(lineWidth, float), 
+      in(lineThickness, float), 
+      in(lineFeedrate, float));
+    procedure Add3SPoint(
+      in(p, TCE3SPoint),
+      in(lineType, integer), 
+      in(lineWidth, float), 
+      in(lineThickness, float), 
+      in(lineFeedrate, float));
+    
+    [helpstring("OnGCodePrefix description
+      @param GCodePrefix - Header string to be prepended before the rest of the g-code sent from the engine. 
+    ")]
+    procedure OnGCodePrefix(in(GCodePrefix, string));
+
+    [helpstring("OnSliceUUID description
+      @param SliceUUID - An ID to link the slice in the printer to a statistical data point in the anonymous slice data
+    ")]
+    procedure OnSliceUUID(in(SliceUUID, string));
+
+    procedure OnLogMessage(
+      in(messageType, integer),
+      in(messageString, string));
+
+    function IsProcessCancelled(
+      return(boolean));
+  end;
+
+  [helpstring("Triangles receiver for CuraEngine")]
+  interface (ITrianglesReciever, 2BF945B3-1166-4152-B9B9-75C5D588CA8E): IUnknown 
+  begin
+    procedure BeginTransfer();
+    procedure EndTransfer();
+    procedure BeginModel();
+    procedure EndModel();
+    procedure BeginMesh(
+      in(meshName, string),
+      in(triangleCount, integer)
+    );
+    procedure EndMesh();
+    procedure AddTriangle(
+      in(p1, TCE3SPoint),
+      in(p2, TCE3SPoint),
+      in(p3, TCE3SPoint)
+    );
+  end;
+
+  [helpstring("CuraEngine params interface")]
+  interface (IParamsReceiver, B82C95B6-9015-4AAC-8CCB-FA92525C9C0D): IUnknown 
+  begin
+    procedure GlobalParamsSize(return(integer));
+    procedure GlobalParamName(in(index, integer), return(string));
+    procedure GlobalParamValue(in(index, integer), return(string));
+    procedure ExtruderParamsSize(return(integer));
+    procedure ExtruderParamName(in(index, integer), return(string));
+    procedure ExtruderParamValue(in(index, integer), return(string));
+  end;
+
+  [helpstring("Connection and transfer of parameters to CuraEngine")]
+  interface (ICuraConnectionLibrary, 52DB7F0D-4D16-4417-AC24-21DA256382B9): IUnknown 
+  begin
+    [helpstring("Slice description
+      @param GlobalSettings - The global settings used for the whole print job
+      @param ExtruderSettings - The settings sent to each extruder object
+      @param CuraEngineControlProcess - Callback interface for performing an action for CuraEngine messages
+      @returns boolean value
+    ")]
+    propertyR (TrianglesReciever, ITrianglesReciever*);
+    function Slice(
+      in(CuraEngineControlProcess, ICuraEngineControlProcess*),
+      in(ParamsReceiver, IParamsReceiver*),
+      in(CuraPath, string),
+      return(boolean));
+  end;
+
+end

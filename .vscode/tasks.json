@@ -1,0 +1,102 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build main",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/.stbuild/build/stbuild.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/.stbuild/build/stbuild.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/.stbuild/build/stbuild.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "group": "build",
+            "label": "Build all (debug)",
+            "command": "${workspaceFolder}/.stbuild/build.cmd",
+            "type": "process",
+            "args": [
+                "--target", "compile",
+                "-variant", "Debug_x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "group": "build",
+            "label": "Build all (release)",
+            "command": "${workspaceFolder}/.stbuild/build.cmd",
+            "type": "process",
+            "args": [
+                "--target", "compile",
+                "-variant", "Release_x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+		{
+			"group": "build",
+            "label": "build CuraEngineOperation",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/CuraEngineOperation/CuraEngineOperation.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+		{
+			"group": "build",
+            "label": "build CuraEngineNetWrapper",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/CuraEngineNetWrapper/CuraEngineNetWrapper.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+		{
+			"group": "build",
+            "label": "build CuraEngineParametersLibrary",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/CuraEngineParametersLibrary/CuraEngineParametersLibrary.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

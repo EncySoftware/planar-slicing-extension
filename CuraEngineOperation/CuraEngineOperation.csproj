@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>CuraEngineOperation</Title>
+    <Description>CuraEngineOperation</Description>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>CS8603</NoWarn>
+    <OutDir>../CuraEngineConnection/build/$(Configuration)</OutDir>
+    <CAMPath>C:/Program Files/ENCY Software/ENCY NB/Bin64</CAMPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="$(OutDir)\CuraConnectionInterface.dll" />
+    <ProjectReference Include="..\CuraEngineNetWrapper\CuraEngineNetWrapper.csproj"/>
+    <ProjectReference Include="..\CuraEngineParametersLibrary\CuraEngineParametersLibrary.csproj"/>
+
+    <Reference Include="$(CAMPath)\STMeshTypes.dll" />
+    <Reference Include="$(CAMPath)\VecMatrLib.dll" />
+    <Reference Include="$(CAMPath)\STTypes.dll" />
+    <Reference Include="$(CAMPath)\STLibraryTypes.dll" />
+    <Reference Include="$(CAMPath)\STXMLPropTypes.dll" />
+    <Reference Include="$(CAMPath)\STMCDFormerTypes.dll" />
+    <Reference Include="$(CAMPath)\STCuttingToolTypes.dll" />
+    <Reference Include="$(CAMPath)\STOperationTypes.dll" />
+    <Reference Include="$(CAMPath)\STModelFormerTypes.dll" />
+    <Reference Include="$(CAMPath)\STSurfaceTypes.dll" />
+    <Reference Include="$(CAMPath)\STCustomPropTypes.dll" />
+    <Reference Include="$(CAMPath)\CAMAPI.Extensions.dll" />
+    <Reference Include="$(CAMPath)\CAMAPI.Logger.dll" />
+    <Reference Include="$(CAMPath)\CAMAPI.ResultStatus.dll" /> 
+    <Reference Include="$(CAMPath)\STModelFormerTypes.dll" /> 
+  </ItemGroup>
+</Project>

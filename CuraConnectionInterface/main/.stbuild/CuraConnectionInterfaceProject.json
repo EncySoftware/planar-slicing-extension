@@ -1,0 +1,8 @@
+{
+	"project_path": "../CuraConnectionInterface.idl",
+	"type": "Idl",
+	"sources": [
+		"./*.json",
+		"../*.idl"
+	]
+}

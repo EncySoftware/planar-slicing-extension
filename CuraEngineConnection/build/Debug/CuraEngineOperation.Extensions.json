@@ -1,0 +1,13 @@
+{
+  "name": "Extension for Planar slicing operation based on Cura",
+  "description": "Extension that allows you to calculate toolpath using the CuraEngine which is the part of Ultimaker Cura (https://ultimaker.com/)",
+  "module_path": "${extensionJsonFolder}/CuraEngineOperation.dll",
+  "extensions": [
+    {
+      "OperationSolver": {
+        "name": "Planar slicing operation solver",
+        "id": "CuraEngineToolpath"
+      }
+    }
+  ]
+}

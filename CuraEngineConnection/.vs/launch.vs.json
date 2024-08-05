@@ -1,0 +1,13 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "dll",
+      "exe": "C:/Program Files/ENCY Software/ENCY NB/Bin64/ency.exe",
+      "project": "CMakeLists.txt",
+      "projectTarget": "CuraEngineConnection.dll",
+      "name": "CuraEngineConnection.dll"
+    }
+  ]
+}
