@@ -9,6 +9,7 @@
 		"../CuraConnectionInterface/main/.stbuild/CuraConnectionInterfaceProject.json",
 		"../CuraEngineNetWrapper/.stbuild/CuraEngineNetWrapperProject.json",
 		"../CuraEngineParametersLibrary/.stbuild/CuraEngineParametersLibraryProject.json",
-		"../CuraEngineOperation/.stbuild/CuraEngineOperationProject.json"
+		"../CuraEngineOperation/.stbuild/CuraEngineOperationProject.json",
+		"../CuraEngineConnectionTest/main/.stbuild/CuraEngineConnectionTestProject.json"
 	]
 }

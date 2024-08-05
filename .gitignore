@@ -20,3 +20,4 @@ lfs/*
 hooks/*
 CuraEngineConnection/conanbuildinfo.txt
 CuraEngineConnection/conaninfo.txt
+CuraEngineConnectionTest/main/.vs/

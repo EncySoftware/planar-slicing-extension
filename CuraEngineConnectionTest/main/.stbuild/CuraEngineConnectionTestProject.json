@@ -1,0 +1,9 @@
+{
+	"type": "CSharp",
+	"project_path": "../CuraEngineConnectionTest.csproj",
+	"sources": [
+		"./*.json",
+		"../src/*.cs",
+		"../*.csproj"
+	]
+}
