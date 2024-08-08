@@ -16,8 +16,7 @@ public static class CuraEngineConnectionHelper
         fNativeLib = null;
         string assemblyLocation = Assembly.GetExecutingAssembly().Location;
         //CuraEngineConnection.dll is taken from the launch location, 
-        //for debugging you will need to manually set the path to CuraEngineConnection.dll in the release folder,
-        //since debugging with Cura installed and a release version of the library is needed
+        //for debugging you will need to build the whole project in debug and manually set the path to CuraEngineConnection.dll and Arcus.dll in the debug folder
         string pathToCuraEngineConnectionDll = Path.GetDirectoryName(assemblyLocation)+"\\CuraEngineConnection.dll";
         if (!File.Exists(pathToCuraEngineConnectionDll))
           return null;

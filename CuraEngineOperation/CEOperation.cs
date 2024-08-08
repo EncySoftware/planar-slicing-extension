@@ -550,7 +550,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     public void ClearReferences() {
         if (opContainer != null)
         {
-            Marshal.ReleaseComObject(opContainer);
+            Marshal.FinalReleaseComObject(opContainer);
             opContainer = null;
         }
         if (helpers!=null)
@@ -923,7 +923,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         
     }
     private void StartCalculateInCuraEngine() 
-    {    if (CuraPath=="" || !Directory.Exists(CuraPath))
+    {    
+        if (CuraPath=="" || !Directory.Exists(CuraPath))
         {
             Console.WriteLine(WarningMessage);
             Info.InstanceInfo.ExtensionManager.Logger.Warning(WarningMessage); 
