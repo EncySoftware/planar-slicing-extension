@@ -89,6 +89,7 @@
 			<SCType ID="ShowCustomParameters" Caption="Show custom parameters" type="boolean"/>
 			<SCType ID="SettingVisibility" Caption="Setting visibility" type="CDATAString" DefaultValue=""/>
 			<SCType ID="AutoToolParameterization" Caption="Auto tool parameterization" type="boolean" DefaultValue="True"/>
+			<SCType ID="Adhesion" Caption="Adhesion" type="boolean" DefaultValue="False"/>
 		</SCType>
 		<ConditionsSection>
 			<EffectiveFeeds DefaultValue="WorkingRetractEngage"/>

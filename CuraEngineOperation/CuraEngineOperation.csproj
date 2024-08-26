@@ -31,5 +31,6 @@
     <Reference Include="$(CAMPath)\CAMAPI.Logger.dll" />
     <Reference Include="$(CAMPath)\CAMAPI.ResultStatus.dll" /> 
     <Reference Include="$(CAMPath)\STModelFormerTypes.dll" /> 
+    <Reference Include="$(CAMPath)\CAMAPI.UIDialogs.dll" />
   </ItemGroup>
 </Project>

@@ -13,6 +13,7 @@ using CuraEngineNetWrapper;
 using STCustomPropTypes;
 using CAMAPI.Extensions;
 using CAMAPI.ResultStatus;
+using CAMAPI.UIDialogs;
 using Microsoft.Win32;
 using System.Reflection;
 using System.Text.Json;
@@ -591,8 +592,19 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     public void LoadFromStream(STXMLPropTypes.IStream Stream) {
 
     }
-
-    public void SaveToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp) {
+    private void AddUserParameter(string ParamId, string Value, bool isGlobalParameter)
+    {
+        CEParamsReceiver.CEParameters.AddUserParameter(ParamId, Value, isGlobalParameter);
+        SaveUserParameterToXML();
+    }
+    private void RemoveUserParameter(string ParamId)
+    {
+        CEParamsReceiver.CEParameters.UserParameters.Remove(ParamId);
+        SaveUserParameterToXML();
+    }
+    private void SaveUserParameterToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
         if (CuraPath!="" && Directory.Exists(CuraPath))
         {
             var ar = XMLProp.Arr["CuraUserParameterArray"];
@@ -608,64 +620,131 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                     ar.AddItem(p);
                 } 
             }
+        }
+    }
+    private void SaveManufacturerToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var manufacturer = XMLProp.Ptr["GeneralParameters.Manufacturer"]; 
             if (manufacturer!=null && CEParamsReceiver.CEParameters.SelectedMachineBrand!=null)
                 manufacturer.ValueAsString = CEParamsReceiver.CEParameters.SelectedMachineBrand.name;  
             else
                 manufacturer.ValueAsString = "";
-
+        }
+    }
+    private void SaveMachineToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var machine = XMLProp.Ptr["GeneralParameters.Machine"]; 
             if (machine!=null && CEParamsReceiver.CEParameters.SelectedMachine!=null)
                 machine.ValueAsString = CEParamsReceiver.CEParameters.SelectedMachine.id;  
             else
                 machine.ValueAsString = "";
-
+        }
+    }
+    private void SaveExtruderToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var extruder = XMLProp.Ptr["GeneralParameters.Extruder"]; 
             if (extruder!=null && CEParamsReceiver.CEParameters.SelectedExtruder!=null)
                 extruder.ValueAsString = CEParamsReceiver.CEParameters.SelectedExtruder.id; 
             else
                 extruder.ValueAsString = "";
-
+        }
+    }
+    private void SaveMaterialBrandToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var materialBrand = XMLProp.Ptr["GeneralParameters.MaterialBrand"]; 
             if (materialBrand!=null && CEParamsReceiver.CEParameters.SelectedMaterialBrand!=null)
                 materialBrand.ValueAsString = CEParamsReceiver.CEParameters.SelectedMaterialBrand.name;    
             else
                 materialBrand.ValueAsString = "";
-
+        }
+    }
+    private void SaveMaterialToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var material = XMLProp.Ptr["GeneralParameters.Material"]; 
             if (material!=null && CEParamsReceiver.CEParameters.SelectedMaterial!=null)
                 material.ValueAsString = CEParamsReceiver.CEParameters.SelectedMaterial.id;    
             else
                 material.ValueAsString = "";
-
+        }
+    }
+    private void SaveVariantToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var variant = XMLProp.Ptr["GeneralParameters.Variant"]; 
             if (variant!=null && CEParamsReceiver.CEParameters.SelectedVariant!=null)
                 variant.ValueAsString = CEParamsReceiver.CEParameters.SelectedVariant.Name; 
             else
                 variant.ValueAsString = "";
-
+        }
+    }
+    private void SaveProfileToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var intentCategory = XMLProp.Ptr["GeneralParameters.Profile"]; 
             if (intentCategory!=null && CEParamsReceiver.CEParameters.SelectedIntentCategory!=null)
                 intentCategory.ValueAsString = CEParamsReceiver.CEParameters.SelectedIntentCategory.IntentCategoryName;
             else    
                 intentCategory.ValueAsString = "";
-
+        }
+    }
+    private void SaveQualityToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var resolution = XMLProp.Ptr["GeneralParameters.Quality"]; 
             if (resolution!=null && CEParamsReceiver.CEParameters.SelectedQuality!=null)
                 resolution.ValueAsString = CEParamsReceiver.CEParameters.SelectedQuality.FileName;
             else    
                 resolution.ValueAsString = "";
-
+        }
+    }
+    private void SaveShowCustomParametersToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var showCustomParameters = XMLProp.Ptr["GeneralParameters.ShowCustomParameters"]; 
             if (showCustomParameters!=null)
                 showCustomParameters.ValueAsBoolean = CEParamsReceiver.CEParameters.IsShowCustomParameters;
-    
+        }
+    }
+    private void SaveSettingVisibilityToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var settingVisibility = XMLProp.Ptr["GeneralParameters.SettingVisibility"]; 
             if (settingVisibility!=null && CEParamsReceiver.CEParameters.SelectedSettingVisibilities!="")
                 settingVisibility.ValueAsString = CEParamsReceiver.CEParameters.SelectedSettingVisibilities;
             else    
                 settingVisibility.ValueAsString = "";
-
+        }
+    }
+    private void SaveAutoToolParameterizationToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
             var AutoToolParameterization = XMLProp.Ptr["GeneralParameters.AutoToolParameterization"]; 
             if (AutoToolParameterization!=null)
                 AutoToolParameterization.ValueAsBoolean = IsAutoToolParameterization;
@@ -677,23 +756,54 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             }
         }
     }
+    public void SaveToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp) {
 
+        SaveUserParameterToXML(XMLProp);
+        SaveManufacturerToXML(XMLProp);
+        SaveMachineToXML(XMLProp);
+        SaveExtruderToXML(XMLProp);
+        SaveMaterialBrandToXML(XMLProp);
+        SaveMaterialToXML(XMLProp);
+        SaveVariantToXML(XMLProp);
+        SaveProfileToXML(XMLProp);
+        SaveQualityToXML(XMLProp);
+        SaveShowCustomParametersToXML(XMLProp);
+        SaveSettingVisibilityToXML(XMLProp);
+        SaveAutoToolParameterizationToXML(XMLProp);
+    }
+    private void LoadAdhesionValueFromXML(STXMLPropTypes.IST_XMLPropPointer XMLProp)
+    {
+        var Adhesion = XMLProp.Ptr["GeneralParameters.Adhesion"]; 
+        if (Adhesion!=null)
+        {
+            Parameter param;
+            var value = Adhesion.ValueAsBoolean;
+            if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("adhesion_type", out param))
+            {
+                if (!value)
+                    CEParamsReceiver.CEParameters.UserParameters[param.id] = "none";
+            }
+        }
+    }
     public void LoadFromXML(STXMLPropTypes.IST_XMLPropPointer XMLProp) {
         if (CuraPath!="" && Directory.Exists(CuraPath))
         {
             var ar = XMLProp.Arr["CuraUserParameterArray"];
             if (ar!=null)
             {
-            CEParamsReceiver.CEParameters.UserParameters.Clear();
-            for (int i=0; i<ar.TopItem+1; i++)
-            {
-                    var param = ar[i];
-                    var name = param.Str["Name"];
-                    var value = param.Str["Value"];
-                    CEParamsReceiver.CEParameters.UserParameters.Add(name, value);
+                CEParamsReceiver.CEParameters.UserParameters.Clear();
+                LoadAdhesionValueFromXML(XMLProp);
+                for (int i=0; i<ar.TopItem+1; i++)
+                {
+                        var param = ar[i];
+                        var name = param.Str["Name"];
+                        var value = param.Str["Value"];
+                        CEParamsReceiver.CEParameters.UserParameters[name] = value;
+                }        
             }
-            
-            }
+            else    
+                LoadAdhesionValueFromXML(XMLProp);
+
             var manufacturer = XMLProp.Ptr["GeneralParameters.Manufacturer"]; 
             if (manufacturer!=null && manufacturer.ValueAsString!=null && manufacturer.ValueAsString!="")
                 CEParamsReceiver.CEParameters.SetSelectedMachineBrand(manufacturer.ValueAsString);
@@ -737,7 +847,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             var AutoToolParameterization = XMLProp.Ptr["GeneralParameters.AutoToolParameterization"]; 
             if (AutoToolParameterization!=null)
                 IsAutoToolParameterization = AutoToolParameterization.ValueAsBoolean;
-                
+    
             CEParamsReceiver.CEParameters.UpdateAllParameters();
         }
     }
@@ -985,7 +1095,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             String userParam;
             if (CEParamsReceiver.CEParameters.UserParameters.TryGetValue(param.id, out userParam))
             {
-                CEParamsReceiver.CEParameters.UserParameters.Remove(param.id);
+                RemoveUserParameter(param.id);
                 CEParamsReceiver.CEParameters.UpdateAllParameters();
             }
         });
@@ -1015,12 +1125,12 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             if (v!=null)
             {
                 CEParamsReceiver.CEParameters.SetValue(param.id, v, isGlobalParameter);
-                CEParamsReceiver.CEParameters.AddUserParameter(param.id, v, isGlobalParameter);
+                AddUserParameter(param.id, v, isGlobalParameter);
             }
             else
             {
                 CEParamsReceiver.CEParameters.SetValue(param.id, "", isGlobalParameter);
-                CEParamsReceiver.CEParameters.AddUserParameter(param.id, "", isGlobalParameter);
+                AddUserParameter(param.id, "", isGlobalParameter);
             }
             CEParamsReceiver.CEParameters.UpdateAllParameters();
                  
@@ -1042,7 +1152,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             String userParam;
             if (CEParamsReceiver.CEParameters.UserParameters.TryGetValue(param.id, out userParam))
             {
-                CEParamsReceiver.CEParameters.UserParameters.Remove(param.id);
+                RemoveUserParameter(param.id);
                 CEParamsReceiver.CEParameters.UpdateAllParameters();
             }
         });
@@ -1078,7 +1188,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         ip.ValueSetter = new IntegerValueSetter(delegate (int v)
         {
             CEParamsReceiver.CEParameters.SetValue(param.id, v.ToString(), isGlobalParameter);
-            CEParamsReceiver.CEParameters.AddUserParameter(param.id, v.ToString(), isGlobalParameter); 
+            AddUserParameter(param.id, v.ToString(), isGlobalParameter); 
             CEParamsReceiver.CEParameters.UpdateAllParameters();
         });
         return ip;
@@ -1098,7 +1208,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             String userParam;
             if (CEParamsReceiver.CEParameters.UserParameters.TryGetValue(param.id, out userParam))
             {
-                CEParamsReceiver.CEParameters.UserParameters.Remove(param.id);
+                RemoveUserParameter(param.id);
                 CEParamsReceiver.CEParameters.UpdateAllParameters();
             }
         });
@@ -1136,7 +1246,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         fp.ValueSetter = new DoubleValueSetter(delegate (double v)
         {
             CEParamsReceiver.CEParameters.SetValue(param.id, v.ToString(), isGlobalParameter);
-            CEParamsReceiver.CEParameters.AddUserParameter(param.id, v.ToString(), isGlobalParameter); 
+            AddUserParameter(param.id, v.ToString(), isGlobalParameter); 
             CEParamsReceiver.CEParameters.UpdateAllParameters();
             if (param.id=="layer_height")
                 SetToolParameterization("layer_height");
@@ -1159,7 +1269,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             String userParam;
             if (CEParamsReceiver.CEParameters.UserParameters.TryGetValue(param.id, out userParam))
             {
-                CEParamsReceiver.CEParameters.UserParameters.Remove(param.id);
+                RemoveUserParameter(param.id);
                 CEParamsReceiver.CEParameters.UpdateAllParameters();
             }
         });
@@ -1196,7 +1306,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         bp.ValueSetter = new BooleanValueSetter(delegate (bool v)
         {
             CEParamsReceiver.CEParameters.SetValue(param.id, v.ToString(), isGlobalParameter);
-            CEParamsReceiver.CEParameters.AddUserParameter(param.id, v.ToString(), isGlobalParameter);
+            AddUserParameter(param.id, v.ToString(), isGlobalParameter);
             CEParamsReceiver.CEParameters.UpdateAllParameters(); 
         });
         return bp;
@@ -1215,7 +1325,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             String userParam;
             if (CEParamsReceiver.CEParameters.UserParameters.TryGetValue(param.id, out userParam))
             {
-                CEParamsReceiver.CEParameters.UserParameters.Remove(param.id);
+                RemoveUserParameter(param.id);
                 CEParamsReceiver.CEParameters.UpdateAllParameters();
             }
         });
@@ -1270,7 +1380,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         ep.ValueSetter = new StringValueSetter(delegate (string v)
         {
             CEParamsReceiver.CEParameters.SetValue(param.id, v, isGlobalParameter);
-            CEParamsReceiver.CEParameters.AddUserParameter(param.id, v, isGlobalParameter);  
+            AddUserParameter(param.id, v, isGlobalParameter);  
             CEParamsReceiver.CEParameters.UpdateAllParameters();           
         });
         return ep;
@@ -1491,25 +1601,25 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("infill_sparse_density", out param))
         {
-            IST_CustomProp infillProp = GetFloatProp(param, true, true);
+            IST_CustomProp infillProp = GetFloatProp(param, true, false);
             if (infillProp != null)
                 SimpleIterator.AddNewProp(infillProp, parentInd);
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("infill_pattern", out param))
         {
-            IST_CustomProp infillPatternProp = GetEnumProp(param, true, true);
+            IST_CustomProp infillPatternProp = GetEnumProp(param, true, false);
             if (infillPatternProp != null)
                 SimpleIterator.AddNewProp(infillPatternProp, parentInd);
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("wall_thickness", out param))
         {
-            IST_CustomProp wallProp = GetFloatProp(param, true, true);
+            IST_CustomProp wallProp = GetFloatProp(param, true, false);
             if (wallProp != null)
                 SimpleIterator.AddNewProp(wallProp, parentInd);
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("top_bottom_thickness", out param))
         {
-            IST_CustomProp topBottomProp = GetFloatProp(param, true, true);
+            IST_CustomProp topBottomProp = GetFloatProp(param, true, false);
             if (topBottomProp != null)
                 SimpleIterator.AddNewProp(topBottomProp, parentInd);
         }
@@ -1523,28 +1633,44 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_enable", out param))
         {
-            IST_CustomProp supportEnabledProp = GetBoolProp(param, true, true);
+            IST_CustomProp supportEnabledProp = GetBoolProp(param, true, false);
             if (supportEnabledProp != null)
                 SimpleIterator.AddNewProp(supportEnabledProp, parentInd);
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_structure", out param))
         {
-            IST_CustomProp supportStructureProp = GetEnumProp(param, true, true);
+            IST_CustomProp supportStructureProp = GetEnumProp(param, true, false);
             if (supportStructureProp != null)
                 SimpleIterator.AddNewProp(supportStructureProp, parentInd);
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_type", out param))
         {
-            IST_CustomProp supportTypeProp = GetEnumProp(param, true, true);
+            IST_CustomProp supportTypeProp = GetEnumProp(param, true, false);
             if (supportTypeProp != null)
                 SimpleIterator.AddNewProp(supportTypeProp, parentInd);
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("adhesion_type", out param))
         {
-            var bp = helpers.CreateBooleanProp("Adhesion");
+            var PropName = "Adhesion";
+            var bp = helpers.CreateBooleanProp(PropName);
             bp.PropID = "_Adhesion";
             bp.IsStructural = new BooleanValueGetter(() => true);
-            bp.Visible = new BooleanValueGetter(() => true);
+            bp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = true;
+
+                try
+                {
+                    isVisible = CEParamsReceiver.CEParameters.IsParameterEnabled(param.id, true);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Get visible failed: {e.Message}");
+                }
+                if (isVisible && SearchFilter!="" && !PropName.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
             bp.PropIsExpandedGetter = new BooleanValueGetter(() => IsAdhesionPropsExpanded);
             bp.PropIsExpandedSetter = new BooleanValueSetter((v) => IsAdhesionPropsExpanded = v);
             bp.ValueGetter = new BooleanValueGetter(delegate ()
@@ -1560,12 +1686,12 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 if (v)
                 {
                     CEParamsReceiver.CEParameters.SetValue(param.id, "brim", true);
-                    CEParamsReceiver.CEParameters.AddUserParameter(param.id, "brim", true); 
+                    AddUserParameter(param.id, "brim", true); 
                 }
                 else
                 {
                     CEParamsReceiver.CEParameters.SetValue(param.id, "none", true);
-                    CEParamsReceiver.CEParameters.AddUserParameter(param.id, "none", true); 
+                    AddUserParameter(param.id, "none", true); 
                 }
             });
 
@@ -1580,9 +1706,15 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         if (atpProp!=null)
         {
             atpProp.PropID = "_auto_tool_parameterization";
-            atpProp.Visible = new BooleanValueGetter(() => true);
+            atpProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = true;
+                if (SearchFilter!="" && !atpProp.Caption.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
             atpProp.ValueGetter = new BooleanValueGetter(() => IsAutoToolParameterization);
-            atpProp.ValueSetter = new BooleanValueSetter((v) => IsAutoToolParameterization = v);  
+            // atpProp.ValueSetter = new BooleanValueSetter((v) => IsAutoToolParameterization = v);  
             atpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
             {
                 IsAutoToolParameterization = v;
@@ -1591,22 +1723,116 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                     SetToolParameterization("layer_height");
                     SetToolParameterization("line_width"); 
                 }
+                SaveAutoToolParameterizationToXML();
             });
             SimpleIterator.AddNewProp(atpProp, -1);
         }
+        return SimpleIterator;
+    }
+    private IST_SimplePropIterator AddGeneralParameters(IST_SimplePropIterator SimpleIterator)
+    {
+        var genProp = helpers.CreateComplexProp("General parameters");
+        if (genProp!=null)
+        {
+            genProp.PropID = "_general_parameters";
+            genProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = true;
+                if (SearchFilter!="" && !genProp.Caption.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
+            genProp.IconFile = "";
+            genProp.TextGetter = new StringValueGetter(() => "Click \"...\" to change");
+            genProp.ButtonQuantity = 1;
+            genProp.ButtonDisplayName[0] = "...";
+            genProp.ButtonHelpText[0] = "";
+            genProp.ButtonIconPath[0] = "";
+            genProp.ButtonMode[0] = TCustomPropButtonState.cpbsClickable;
+            genProp.ClickAction[0]  = new ButtonClickAction(delegate ()
+            {
+                var extension = Info.InstanceInfo.ExtensionManager.GetSingletonExtension("Extension.UIDialogs.Core", out TResultStatus ret);
+                var uiDialog = (ICAMAPI_UIDialogsHelper)extension;
+
+                var genParamsWindow = uiDialog.CreateWindow("General parameters");
+                var Iterator = helpers.CreateSimplePropIterator();
+                Iterator = FillGeneralparameters(Iterator);
+                Iterator.MoveToRoot();
+                genParamsWindow.PropIteratorGetter = new PropIteratorGetter(delegate()
+                {
+                    var Iterator = helpers.CreateSimplePropIterator();
+                    Iterator = FillGeneralparameters(Iterator);
+                    Iterator.MoveToRoot();
+                    return (IST_CustomPropIterator)Iterator;
+                });
+                TUIButtonTypeFlags buttons = TUIButtonTypeFlags.btfOk;
+                genParamsWindow.Buttons = (ushort)buttons;
+                var buttonPressed = genParamsWindow.ShowModal();
+                Info.InstanceInfo.ExtensionManager.Logger.Info("General parameters window is opened."); 
+            });
+            SimpleIterator.AddNewProp(genProp, -1);
+        }
+        return SimpleIterator;
+    }
+    private IST_SimplePropIterator AddCustomParamtersField(IST_SimplePropIterator SimpleIterator)
+    {
+
+        var parentInd = -1;
+        // show custom parameters
+        var scpProp = helpers.CreateBooleanProp("Show custom parameters");
+        if (scpProp!=null)
+        {
+            scpProp.PropID = "_show_custom_parameters";
+            scpProp.IsStructural = new BooleanValueGetter(() => true);
+            scpProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = true;
+                if (SearchFilter!="" && !scpProp.Caption.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
+            scpProp.ValueGetter = new BooleanValueGetter(() => CEParamsReceiver.CEParameters.IsShowCustomParameters);
+            scpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
+            {
+                CEParamsReceiver.CEParameters.IsShowCustomParameters = v;
+                SaveShowCustomParametersToXML();
+            }); 
+            SimpleIterator.AddNewProp(scpProp, parentInd);
+        }
+
+        //setting visibility
+        var svProp = helpers.CreateEnumWithIDProp("Setting visibility");
+        if (svProp!=null)
+        {
+            svProp.PropID = "_setting_visibility";
+            svProp.IsStructural = new BooleanValueGetter(() => true);
+            svProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = true;
+                if (SearchFilter!="" && !svProp.Caption.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
+            for (int i=0; i<CEParamsReceiver.CEParameters.SettingVisibilities.Count; i++)
+            {
+                var sv = CEParamsReceiver.CEParameters.SettingVisibilities[i];
+                svProp.Add(sv, sv, ""); 
+            }
+            svProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedSettingVisibilities);
+            svProp.ValueSetter = new StringValueSetter(delegate (string v)
+            {
+                CEParamsReceiver.CEParameters.SelectedSettingVisibilities = v;
+                SaveSettingVisibilityToXML();
+            });
+            SimpleIterator.AddNewProp(svProp, parentInd);
+        }
+
         return SimpleIterator;
     }
     private IST_SimplePropIterator FillGeneralparameters(IST_SimplePropIterator SimpleIterator)
     {
 
         var parentInd = -1;
-        var generalProp = helpers.CreateComplexProp("General");
-        generalProp.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
-        generalProp.PropIsExpandedGetter = new BooleanValueGetter(() => IsGeneralPropsExpanded);
-        generalProp.PropIsExpandedSetter = new BooleanValueSetter((v) => IsGeneralPropsExpanded = v);
-        if (generalProp != null)
-            parentInd = SimpleIterator.AddNewProp(generalProp, -1);
-
         // machines brands
         var manufProp = helpers.CreateEnumWithIDProp("Manufacturer");
         if (manufProp!=null)
@@ -1620,7 +1846,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 manufProp.Add(manuf.name, manuf.name, ""); 
             }
             manufProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedMachineBrand.name);
-            manufProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SetSelectedMachineBrand(v, true));
+            manufProp.ValueSetter = new StringValueSetter(delegate (string v) 
+            {
+                CEParamsReceiver.CEParameters.SetSelectedMachineBrand(v, true);
+                SaveManufacturerToXML();
+            });
             SimpleIterator.AddNewProp(manufProp, parentInd);
         }
 
@@ -1638,7 +1868,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                     machProp.Add(mach.id, mach.name, ""); 
             }
             machProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedMachine.id);
-            machProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SetSelectedMachine(v));
+            machProp.ValueSetter = new StringValueSetter(delegate (string v)
+            {
+                CEParamsReceiver.CEParameters.SetSelectedMachine(v);
+                SaveMachineToXML();
+            });
             SimpleIterator.AddNewProp(machProp, parentInd);
         }
 
@@ -1661,7 +1895,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 extrProp.Add(extr.id, extr.name, ""); 
             }
             extrProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedExtruder.id);
-            extrProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SetSelectedExtruder(v));
+            extrProp.ValueSetter = new StringValueSetter(delegate (string v)
+            {
+                CEParamsReceiver.CEParameters.SetSelectedExtruder(v);
+                SaveExtruderToXML();
+            });
             SimpleIterator.AddNewProp(extrProp, parentInd);
         }
 
@@ -1697,7 +1935,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 }        
             }
             materialBrandProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedMaterialBrand.name);
-            materialBrandProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SetSelectedMaterialBrand(v, true));
+            materialBrandProp.ValueSetter = new StringValueSetter(delegate (string v)
+            {
+                CEParamsReceiver.CEParameters.SetSelectedMaterialBrand(v, true);
+                SaveMaterialBrandToXML();
+            });
             SimpleIterator.AddNewProp(materialBrandProp, parentInd);
         }
 
@@ -1730,7 +1972,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 
             }
             matProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedMaterial.id);
-            matProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SetSelectedMaterial(v));
+            matProp.ValueSetter = new StringValueSetter(delegate (string v)
+            {
+                CEParamsReceiver.CEParameters.SetSelectedMaterial(v);
+                SaveMaterialToXML();
+            });
             SimpleIterator.AddNewProp(matProp, parentInd);
         }   
 
@@ -1759,7 +2005,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 else    
                     return "";
             });
-            varProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SetSelectedVariant(v));
+            varProp.ValueSetter = new StringValueSetter(delegate (string v)
+            {
+                CEParamsReceiver.CEParameters.SetSelectedVariant(v);
+                SaveVariantToXML();
+            });
             SimpleIterator.AddNewProp(varProp, parentInd);
         }
 
@@ -1788,7 +2038,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 else    
                     return "";
             });
-            profProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SetSelectedIntentCategory(v));
+            profProp.ValueSetter = new StringValueSetter(delegate (string v)
+            {
+                CEParamsReceiver.CEParameters.SetSelectedIntentCategory(v);
+                SaveProfileToXML();
+            });
             SimpleIterator.AddNewProp(profProp, parentInd);
         }
         
@@ -1821,37 +2075,12 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 else    
                     return "";
             });
-            resProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SetSelectedQuality(v)); 
-            SimpleIterator.AddNewProp(resProp, parentInd);
-        }
-        
-        // show custom parameters
-        var scpProp = helpers.CreateBooleanProp("Show custom parameters");
-        if (scpProp!=null)
-        {
-            scpProp.PropID = "_show_custom_parameters";
-            scpProp.IsStructural = new BooleanValueGetter(() => true);
-            scpProp.Visible = new BooleanValueGetter(() => true);
-            scpProp.ValueGetter = new BooleanValueGetter(() => CEParamsReceiver.CEParameters.IsShowCustomParameters);
-            scpProp.ValueSetter = new BooleanValueSetter((v) => CEParamsReceiver.CEParameters.IsShowCustomParameters = v);  
-            SimpleIterator.AddNewProp(scpProp, parentInd);
-        }
-
-        //setting visibility
-        var svProp = helpers.CreateEnumWithIDProp("Setting visibility");
-        if (svProp!=null)
-        {
-            svProp.PropID = "_setting_visibility";
-            svProp.IsStructural = new BooleanValueGetter(() => true);
-            svProp.Visible = new BooleanValueGetter(() => CEParamsReceiver.CEParameters.IsShowCustomParameters);
-            for (int i=0; i<CEParamsReceiver.CEParameters.SettingVisibilities.Count; i++)
+            resProp.ValueSetter = new StringValueSetter(delegate (string v)
             {
-                var sv = CEParamsReceiver.CEParameters.SettingVisibilities[i];
-                svProp.Add(sv, sv, ""); 
-            }
-            svProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedSettingVisibilities);
-            svProp.ValueSetter = new StringValueSetter((v) => CEParamsReceiver.CEParameters.SelectedSettingVisibilities = v);
-            SimpleIterator.AddNewProp(svProp, parentInd);
+                CEParamsReceiver.CEParameters.SetSelectedQuality(v);
+                SaveQualityToXML();
+            }); 
+            SimpleIterator.AddNewProp(resProp, parentInd);
         }
 
         return SimpleIterator;
@@ -1903,37 +2132,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         ParamSimplePropIterator.MoveToRoot();
         AcceptFilterToParams();    
     }
-    private IST_SimplePropIterator AddSearching(IST_SimplePropIterator SimpleIterator)
-    {     
-        var sp = helpers.CreateStringProp("Search parameter");
-        sp.PropID = "_searching";
-        sp.IsStructural = new BooleanValueGetter(() => false);
-        sp.Visible = new BooleanValueGetter(delegate ()
-        {
-            return true;
-        });
-        sp.RestoreValueProc = new DefaultPropValue(delegate()
-        {
-            SearchFilter = "";
-            AcceptFilter();
-        });
-        
-        sp.ValueGetter = new StringValueGetter(delegate ()
-        {
-            AcceptFilter();
-            return SearchFilter;
-        });
-        sp.ValueSetter = new StringValueSetter(delegate (string v)
-        {
-            if (v!=null)
-                SearchFilter = v;
-            else
-                SearchFilter = "";
-            AcceptFilter();
-        });
-        SimpleIterator.AddNewProp(sp, -1);
-        return SimpleIterator;
-    }
+    
     bool IST_Operation.GetPropIterator(string PageID, out IST_CustomPropIterator PropIterator)
     {
         if (CuraPath=="" || !Directory.Exists(CuraPath))
@@ -1946,12 +2145,13 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         CEParamsReceiver.CEParameters.UpdateAllParameters();
 
         var SimpleIterator = helpers.CreateSimplePropIterator();
-        SimpleIterator = AddAutoToolParameterization(SimpleIterator);
-        SimpleIterator = FillGeneralparameters(SimpleIterator);
+        SimpleIterator = AddGeneralParameters(SimpleIterator);
+        SimpleIterator = AddAutoToolParameterization(SimpleIterator);      
+        SimpleIterator = AddCustomParamtersField(SimpleIterator);
+        
         var ssv = CEParamsReceiver.CEParameters.SelectedSettingVisibilities;
         if (CEParamsReceiver.CEParameters.IsShowCustomParameters && ssv!=null && ssv!="")
         {
-            SimpleIterator = AddSearching(SimpleIterator);
             if (ssv=="all")
             {
                 SimpleIterator = FillPropIteratorByAllParams(SimpleIterator);
@@ -1971,6 +2171,25 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         ParamSimplePropIterator = SimpleIterator;
         PropIterator = (IST_CustomPropIterator)SimpleIterator;
         return true;
+    }
+
+    void IST_Operation.DoChangeParameter(string ParameterName, string Value)
+    {
+        if (ParameterName != null)
+        {
+            if (ParameterName == "_searching")
+            {
+                if (Value == null)
+                {
+                    SearchFilter = "";
+                } 
+                else if (SearchFilter.ToLower() != Value.ToLower())
+                {
+                    SearchFilter = Value;
+                }
+                AcceptFilter();
+            }
+        }  
     }
 }
 

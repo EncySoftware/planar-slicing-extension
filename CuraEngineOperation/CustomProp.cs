@@ -1,7 +1,7 @@
 namespace CuraEngineOperation;
 
 using STCustomPropTypes;
-
+using CAMAPI.UIDialogs;
 public class CustomProp : IST_CustomProp, IST_CustomPropID, IST_CustomPropCaption, IST_CustomPropIcon, IST_CustomDoubleProp
 {
     private double DoubleValue = 10;
@@ -139,5 +139,33 @@ public class DefaultPropValue : IST_CustomPropDefaultable
     public void RestoreDefaultValue()
     {
         fOnRestoreDefaultPropValue();
+    }
+}
+public delegate void OnButtonClickAction();
+public class ButtonClickAction : IButtonClickAction
+{
+    public ButtonClickAction(OnButtonClickAction action)
+    {
+        fOnButtonClickAction = action;
+    }   
+    OnButtonClickAction fOnButtonClickAction;
+
+    public void DoAction()
+    {
+        fOnButtonClickAction();
+    }
+}
+
+public delegate IST_CustomPropIterator OnGetPropIterator();
+public class PropIteratorGetter : IPropIteratorGetter
+{
+    public PropIteratorGetter(OnGetPropIterator getter)
+    {
+        fOnGetPropIterator = getter;
+    }   
+    OnGetPropIterator fOnGetPropIterator;
+    public IST_CustomPropIterator GetValue()
+    {
+        return(fOnGetPropIterator());
     }
 }
