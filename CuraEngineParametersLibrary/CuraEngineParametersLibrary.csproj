@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Title>CuraEngineParametersLibrary</Title>
     <Description>CuraEngineParametersLibrary</Description>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>CS8603</NoWarn>

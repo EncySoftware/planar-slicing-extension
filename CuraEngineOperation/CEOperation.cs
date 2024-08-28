@@ -381,7 +381,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         {
             if (fInfo != null)
             {
-                Marshal.ReleaseComObject(fInfo);
+                Marshal.FinalReleaseComObject(fInfo);
                 fInfo = null;
             }
             fInfo = value;
@@ -556,17 +556,17 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
         if (helpers!=null)
         {            
-            Marshal.ReleaseComObject(helpers);
+            Marshal.FinalReleaseComObject(helpers);
             helpers = null;
         }
         if (ParamSimplePropIterator != null)
         {
-            Marshal.ReleaseComObject(ParamSimplePropIterator);
+            Marshal.FinalReleaseComObject(ParamSimplePropIterator);
             ParamSimplePropIterator = null;
         }
         if (CEControlProcess.Logger != null)
         {
-            Marshal.ReleaseComObject(CEControlProcess.Logger);
+            Marshal.FinalReleaseComObject(CEControlProcess.Logger);
             CEControlProcess.Logger = null;
         }
     }
@@ -579,7 +579,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var mfJa = opContainer.MFJobAssignment;
         mfJa.SupportedItems = ja;
 		mfJa.FillItemsBySupportedItems();
-        Marshal.ReleaseComObject(mfJa);
+        Marshal.FinalReleaseComObject(mfJa);
     }
     public void InitModelFormers() {
         UpdateModelFormerItems();
@@ -975,7 +975,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                     faceList = opContainer.MFPart.GetFaceList(newLCS);    
                     //faceList = opContainer.MFPart.GetFaceList(opContainer.LCS);   
                 }
-                Marshal.ReleaseComObject(mfJa);
+                Marshal.FinalReleaseComObject(mfJa);
                                   
                 int TotalTriangleCount = 0;  
                 for (int i = 0; i < faceList.Count; i++)
@@ -1767,7 +1767,10 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 });
                 TUIButtonTypeFlags buttons = TUIButtonTypeFlags.btfOk;
                 genParamsWindow.Buttons = (ushort)buttons;
-                var buttonPressed = genParamsWindow.ShowModal();
+                genParamsWindow.ShowModal();
+
+                Marshal.FinalReleaseComObject(genParamsWindow);
+                Marshal.FinalReleaseComObject(uiDialog);
                 Info.InstanceInfo.ExtensionManager.Logger.Info("General parameters window is opened."); 
             });
             SimpleIterator.AddNewProp(genProp, -1);
@@ -2167,7 +2170,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
         SimpleIterator.MoveToRoot();
         if (ParamSimplePropIterator!=null)
-            Marshal.ReleaseComObject(ParamSimplePropIterator);
+            Marshal.FinalReleaseComObject(ParamSimplePropIterator);
         ParamSimplePropIterator = SimpleIterator;
         PropIterator = (IST_CustomPropIterator)SimpleIterator;
         return true;
