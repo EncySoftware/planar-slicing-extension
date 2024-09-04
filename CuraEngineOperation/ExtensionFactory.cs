@@ -50,7 +50,7 @@ public class ExtensionFactory : IExtensionFactory
         {
             foreach (XmlNode childNode in operationsNode.ChildNodes)
             {
-                if (childNode.InnerText.ToLower().EndsWith(OperationXMlName)) 
+                if (childNode.InnerText.ToLower().EndsWith(OperationXMlName.ToLower())) 
                 {
                     operationsNode.RemoveChild(childNode);
                 }
