@@ -48,12 +48,15 @@ public class ExtensionFactory : IExtensionFactory
     {
         if (operationsNode!=null)
         {
-            foreach (XmlNode childNode in operationsNode.ChildNodes)
+            var childNode = operationsNode.FirstChild;
+            while (childNode!=null)
             {
+                var siblingNode = childNode.NextSibling;
                 if (childNode.InnerText.ToLower().EndsWith(OperationXMlName.ToLower())) 
                 {
                     operationsNode.RemoveChild(childNode);
                 }
+                childNode = siblingNode;
             }
         }
     } 
