@@ -284,10 +284,9 @@ void Listener::messageReceived()
                     CuraEngineControlProcess->OnStopLayersOptimized();
                 }
             }
-            
+            CuraEngineControlProcess->OnFinish(_com_util::ConvertStringToBSTR("Finished"));
             auto msg = "Slicing Finished";
             *SlicedFinished = -1;
-            CuraEngineControlProcess->OnFinish(_com_util::ConvertStringToBSTR("Finished"));
             break;
         }
         default:

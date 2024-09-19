@@ -19,17 +19,23 @@ using System.Reflection;
 using System.Text.Json;
 using STModelFormerTypes;
 using STXMLPropTypes;
-using System.Globalization;
 using CAMAPI.Logger;
+public enum ToolpathParsingMode
+{
+    tpmSimplified,
+    tpmGCodeBased
+}
 public class CuraEngineControlProcess : ICuraEngineControlProcess
 {
+    public double FilamentExtrudingLength = 100; 
+    public ToolpathParsingMode tpm = ToolpathParsingMode.tpmSimplified;
+    public bool IsOutputAdditionalCLDataParameters = false;
+    public bool IsOutputFilamentExtruding = false;
     public IExtensionLogger? Logger = null;
     bool startPathSegment = false;
     double currentLayerHeight = 0;
     public TST3DBox boundingBox;
-    int cutInc = 0;
     int LayerInc = 0;
-    int segmentInc = 0;
     float prevX = 0;
     float prevY = 0;
     int prevLineType = 0;
@@ -37,8 +43,11 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
     float prevLineThickness = 0;
     float prevLineFeedrate = 0;
     bool IsStartCreateToolpath = true;
+    public  GCodeLayout GCLayout = null;
     public IST_CLDReceiver? clf;
     public IST_UpdateHandler? updateHandler;
+    bool isFeedSectionOpened = false;
+    int LastLineSection = 0;
     public void OnProgress(double progress)
     {
         try
@@ -53,12 +62,20 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
             Console.WriteLine("Exception: " + e.Message);
         }
     }
-
+    
     public void OnGCode(string GCode)
     {
         try
-        {
-            // StreamWriter swGCode = new StreamWriter("D:\\Cura\\CallbacksMessage\\GCode.txt", true);
+        {  
+            if (tpm==ToolpathParsingMode.tpmGCodeBased)
+            {
+                if (GCLayout == null)
+                    GCLayout = new GCodeLayout();
+                GCLayout.AddGCodeBlock(GCode);  
+            }
+                   
+            // StreamWriter swGCode = new StreamWriter("C:\\Users\\Andrew\\Desktop\\NewGCode.txt", true);
+            // swGCode.WriteLine("\n------GCODE-------");
             // swGCode.WriteLine(GCode);
             // swGCode.Close();
         }
@@ -84,12 +101,32 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
     {
         try
         {
-            IsStartCreateToolpath = true;
-            LayerInc = 0;
+            if (tpm==ToolpathParsingMode.tpmGCodeBased)
+            {
+                if (GCLayout != null)
+                    GCLayout.AddToCLData(clf, boundingBox, IsOutputFilamentExtruding, FilamentExtrudingLength);
+            }
         }
         catch(Exception e)
         {
             Console.WriteLine("Exception: " + e.Message);
+        }
+        finally
+        {
+            if (tpm==ToolpathParsingMode.tpmGCodeBased)
+            {
+                if (GCLayout != null)
+                {
+                    GCLayout.Clear();
+                    GCLayout = null;
+                }
+                else
+                {
+                    IsStartCreateToolpath = true;
+                    LayerInc = 0;
+                    isFeedSectionOpened = false;
+                }  
+            }
         }
     }
     public void OnError(string msg)
@@ -108,7 +145,17 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
     {
         try
         {
-
+            if (tpm==ToolpathParsingMode.tpmGCodeBased)
+            {
+                if (GCLayout == null)
+                    GCLayout = new GCodeLayout();
+                GCLayout.AddGCodeBlock(GCodePrefix); 
+            }
+            else
+            {
+                IsStartCreateToolpath = true;
+                LayerInc = 0;
+            }
         }
         catch(Exception e)
         {
@@ -130,10 +177,14 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
     public void OnStartLayersOptimized(int id, double height, double thickness)
     {
         try
-        {   LayerInc++;
-            currentLayerHeight = height;
-            var group = "Layer: " + LayerInc.ToString() + " (" + currentLayerHeight.ToString() + " mm)"; 
-            clf.BeginItem(TST_CLDItemType.itGroup, group, group);
+        {   
+            if (tpm==ToolpathParsingMode.tpmSimplified)
+            {
+                LayerInc++;
+                currentLayerHeight = height;
+                var group = "Layer: " + LayerInc.ToString(); 
+                clf.BeginItem(TST_CLDItemType.itGroup, group, group);
+            }
         }
         catch(Exception e)
         {
@@ -144,8 +195,16 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
     {
         try
         {
-            segmentInc = 0;
-            clf.EndItem();
+            if (tpm==ToolpathParsingMode.tpmSimplified)
+            {
+                if (isFeedSectionOpened)
+                {
+                    clf.EndItem();
+                    isFeedSectionOpened = false;
+                    LastLineSection = 0;
+                }
+                clf.EndItem();
+            }
         }
         catch(Exception e)
         {
@@ -156,10 +215,8 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
     {
         try
         {   
-            segmentInc++;
-            startPathSegment = true;
-            var group = "Segment: " + segmentInc.ToString(); 
-            clf.BeginItem(TST_CLDItemType.itGroup, group, group);
+            if (tpm==ToolpathParsingMode.tpmSimplified)
+                startPathSegment = true;
         }
         catch(Exception e)
         {
@@ -171,118 +228,123 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
     {
         try
         {
-            cutInc = 0;
-            clf.EndItem();
+            if (tpm==ToolpathParsingMode.tpmSimplified)
+            {
+                if (isFeedSectionOpened)
+                {
+                    clf.EndItem();
+                    isFeedSectionOpened = false;
+                    LastLineSection = 0;
+                }
+            }
         }
         catch(Exception e)
         {
             Console.WriteLine("Exception: " + e.Message);
         }
     }
-    private TSTFeedTypeFlag GetFeed(int typeFeed)
-    {
-        var feed = TSTFeedTypeFlag.ffLongNext;
-        switch (typeFeed)
-        {
-            case 1:
-                feed = TSTFeedTypeFlag.ffFinish;
-                break;
-            case 2:
-                feed = TSTFeedTypeFlag.ffEngage;
-                break;
-            case 3:
-                feed = TSTFeedTypeFlag.ffFinish;
-                break;
-            case 4:
-                feed = TSTFeedTypeFlag.ffRetract;
-                break;
-            case 5:
-                feed = TSTFeedTypeFlag.ffFirst;
-                break;
-            case 6:
-                feed = TSTFeedTypeFlag.ffWorking;
-                break;
-            case 7:
-                feed = TSTFeedTypeFlag.ffRetract;
-                break;
-            case 8:
-                feed = TSTFeedTypeFlag.ffNext;
-                break;
-            case 9:
-                feed = TSTFeedTypeFlag.ffLongNext;
-                break;
-            case 10:
-                feed = TSTFeedTypeFlag.ffRetract;
-                break;
-            case 11:
-                feed = TSTFeedTypeFlag.ffPlunge;
-                break;
-        }
-
-        return feed;
-    }
     public void Add2SPoint(TCE2SPoint p, int lineType, float lineWidth, float lineThickness, float lineFeedrate)
     {
         try
         {
-            if (IsStartCreateToolpath)
+            if (tpm==ToolpathParsingMode.tpmSimplified)
             {
-                IsStartCreateToolpath = false;
-            }
-            else
-            {
-                if (startPathSegment)
-                {              
-                    clf.AddPrint("#CuraEngine: LineType="+lineType.ToString());
-                    clf.AddPrint("#CuraEngine: LineWidth="+lineWidth.ToString());
-                    clf.AddPrint("#CuraEngine: LineThickness="+lineThickness.ToString());
-                    lineFeedrate = lineFeedrate*60;
-                    clf.AddPrint("#CuraEngine: LineFeedrate="+lineFeedrate.ToString());
-
-                    prevLineType = lineType;
-                    prevLineWidth = lineWidth;
-                    prevLineThickness = lineThickness; 
-                    prevLineFeedrate = lineFeedrate;  
-                    prevX = p.X;
-                    prevY = p.Y;  
-                    startPathSegment = false;
+                if (IsStartCreateToolpath)
+                {
+                    IsStartCreateToolpath = false;
                 }
                 else
-                {                                 
-                    cutInc ++; 
-                    var feed = GetFeed(lineType); 
-                    var prevFeed = GetFeed(prevLineType);
-                    lineFeedrate = lineFeedrate*60;
-                    if (feed != prevFeed || lineFeedrate != prevLineFeedrate)    //check for correctly working of interpolation  
-                        clf.OutFeed((int)feed, lineFeedrate, true);
-
-                    if (prevLineType!=lineType)
-                    {
-                        clf.AddPrint("#CuraEngine: LineType="+lineType.ToString());
+                {
+                    if (startPathSegment)
+                    {           
+                        if (lineType!=0 && lineType!=8 && lineType!=9)
+                        {
+                            LastLineSection = lineType;
+                            var feedName = FeedConverter.GetFeedName((int)lineType); 
+                            clf.BeginItem(TST_CLDItemType.itGroup, feedName, feedName);
+                            isFeedSectionOpened = true;
+                        }
+                              
+                        lineFeedrate = lineFeedrate*60;  
+                        if (IsOutputAdditionalCLDataParameters) 
+                        {
+                            clf.AddPrint("#CuraEngine: LineType="+lineType.ToString());
+                            clf.AddPrint("#CuraEngine: LineWidth="+lineWidth.ToString());
+                            clf.AddPrint("#CuraEngine: LineThickness="+lineThickness.ToString());             
+                            clf.AddPrint("#CuraEngine: LineFeedrate="+lineFeedrate.ToString());
+                        }
+                        
                         prevLineType = lineType;
-                    }
-                    if (prevLineWidth!=lineWidth)
-                    {
-                        clf.AddPrint("#CuraEngine: LineWidth="+lineWidth.ToString());
                         prevLineWidth = lineWidth;
+                        prevLineThickness = lineThickness; 
+                        prevLineFeedrate = lineFeedrate;  
+                        prevX = p.X;
+                        prevY = p.Y;  
+                        startPathSegment = false;
                     }
-                    if (prevLineThickness!=lineThickness)
-                    {
-                        clf.AddPrint("#CuraEngine: LineThickness="+lineThickness.ToString());
-                        prevLineThickness = lineThickness;
-                    }            
-                    if (prevLineFeedrate!=lineFeedrate)
-                    {
-                        clf.AddPrint("#CuraEngine: LineFeedrate="+lineFeedrate.ToString());
-                        prevLineFeedrate = lineFeedrate;
-                    }          
-                    
-                    var pZ = currentLayerHeight + boundingBox.Min.Z;
-                    var pX = p.X;
-                    var pY = p.Y;
-                    clf.CutTo(new TST3DPoint { X = pX, Y = pY, Z = pZ });
-                    prevX = p.X;
-                    prevY = p.Y;
+                    else
+                    {                                 
+                        var feed = FeedConverter.ConvertToCLDataFeed(lineType); 
+                        var prevFeed = FeedConverter.ConvertToCLDataFeed(prevLineType);
+                        lineFeedrate = lineFeedrate*60;
+                        if (feed != prevFeed || lineFeedrate != prevLineFeedrate)    //check for correctly working of interpolation  
+                            clf.OutFeed(feed, lineFeedrate, true);
+
+                        if (LastLineSection!=lineType)
+                        {
+                            if (lineType!=0 && lineType!=8 && lineType!=9)
+                            {
+                                LastLineSection = lineType;
+                                if (isFeedSectionOpened)
+                                {
+                                    clf.EndItem();
+                                    isFeedSectionOpened = false;
+                                }
+                                var feedName = FeedConverter.GetFeedName((int)lineType); 
+                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, feedName);
+                                isFeedSectionOpened = true;
+                            }
+                        }
+                        if (prevLineType!=lineType)
+                        {
+                            if (IsOutputAdditionalCLDataParameters) 
+                            {
+                                clf.AddPrint("#CuraEngine: LineType="+lineType.ToString());
+                            }
+                            prevLineType = lineType;
+                        }
+                        if (prevLineWidth!=lineWidth)
+                        {
+                            if (IsOutputAdditionalCLDataParameters) 
+                            {
+                                clf.AddPrint("#CuraEngine: LineWidth="+lineWidth.ToString());
+                            }
+                            prevLineWidth = lineWidth;
+                        }
+                        if (prevLineThickness!=lineThickness)
+                        {
+                            if (IsOutputAdditionalCLDataParameters) 
+                            {
+                                clf.AddPrint("#CuraEngine: LineThickness="+lineThickness.ToString());
+                            }
+                            prevLineThickness = lineThickness;
+                        }            
+                        if (prevLineFeedrate!=lineFeedrate)
+                        {
+                            if (IsOutputAdditionalCLDataParameters) 
+                            {
+                                clf.AddPrint("#CuraEngine: LineFeedrate="+lineFeedrate.ToString());
+                            }
+                            prevLineFeedrate = lineFeedrate;
+                        }          
+                        
+                        var pZ = currentLayerHeight + boundingBox.Min.Z;
+                        var pX = p.X;
+                        var pY = p.Y;
+                        clf.CutTo(new TST3DPoint { X = pX, Y = pY, Z = pZ });
+                        prevX = p.X;
+                        prevY = p.Y;
+                    }
                 }
             }
         }
@@ -415,15 +477,6 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         {
             CEParamsReceiver.CEParameters.CuraPath = CuraPath;
             CEParamsReceiver.CEParameters.ReadAllParametersAndConfigs(); 
-            // StreamWriter swGCode = new StreamWriter("D:\\CuraParametersAndDescriptions.txt", true);
-            // foreach (KeyValuePair<string, Parameter> keyValueElement in CEParamsReceiver.CEParameters.GlobalParams)
-            // {
-            //     swGCode.WriteLine(keyValueElement.Value.label+":");
-            //     swGCode.WriteLine(keyValueElement.Value.description);
-            //     swGCode.WriteLine("\r\n");
-            // }
-            
-            // swGCode.Close();
         }
         var extension = Info.InstanceInfo.ExtensionManager.GetSingletonExtension("Extension.CustomPropHelpers", out TResultStatus ret);
         helpers = (IST_CustomPropHelpers)extension;    
@@ -448,7 +501,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             var xmlParam = xmlProp.Ptr["ToolSection.Tools(0).Properties." + paramNameInCAMSystem];
             var value = CEParamsReceiver.CEParameters.GetValue(paramName, true);
             double doubleValue;
-            if (DoubleTryParse(value, out doubleValue))
+            if (DoubleParser.DoubleTryParse(value, out doubleValue))
             {
                 xmlParam.ValueAsDouble = doubleValue; 
             }
@@ -756,6 +809,52 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             }
         }
     }
+    private void SaveFilamentExtrudingLengthToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
+            var fel = XMLProp.Ptr["GeneralParameters.FilamentExtrudingLength"]; 
+            if (fel!=null)
+                fel.ValueAsDouble = FilamentExtrudingLength;
+        }
+    }
+    private void SaveOutputAdditionalParametersToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
+            var OutputAdditionalParameters = XMLProp.Ptr["GeneralParameters.OutputAdditionalParameters"]; 
+            if (OutputAdditionalParameters!=null)
+                OutputAdditionalParameters.ValueAsBoolean = IsOutputAdditionalCLDataParameters;
+        }
+    }
+    private void SaveOutputFilamentExtrudingToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+    if (XMLProp==null)
+        XMLProp = opContainer.XMLProp;
+    if (CuraPath!="" && Directory.Exists(CuraPath))
+    {
+        var OutputFilamentExtruding = XMLProp.Ptr["GeneralParameters.OutputFilamentExtruding"]; 
+        if (OutputFilamentExtruding!=null)
+            OutputFilamentExtruding.ValueAsBoolean = IsOutputFilamentExtruding;
+    }
+    }
+    private void SaveToolpathParsingModeToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
+        if (XMLProp==null)
+            XMLProp = opContainer.XMLProp;
+        if (CuraPath!="" && Directory.Exists(CuraPath))
+        {
+            var tpMode = XMLProp.Ptr["GeneralParameters.ToolpathParsingMode"]; 
+            if (tpMode!=null)
+            {
+                if (tpm==ToolpathParsingMode.tpmSimplified)
+                    tpMode.ValueAsString = "Simplified";
+                else    
+                    tpMode.ValueAsString = "GCodeBased";
+            }
+                
+        }
+    }
     public void SaveToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp) {
 
         SaveUserParameterToXML(XMLProp);
@@ -770,6 +869,10 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         SaveShowCustomParametersToXML(XMLProp);
         SaveSettingVisibilityToXML(XMLProp);
         SaveAutoToolParameterizationToXML(XMLProp);
+        SaveToolpathParsingModeToXML(XMLProp);
+        SaveOutputAdditionalParametersToXML(XMLProp);
+        SaveOutputFilamentExtrudingToXML(XMLProp);
+        SaveFilamentExtrudingLengthToXML(XMLProp);
     }
     private void LoadAdhesionValueFromXML(STXMLPropTypes.IST_XMLPropPointer XMLProp)
     {
@@ -847,7 +950,28 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             var AutoToolParameterization = XMLProp.Ptr["GeneralParameters.AutoToolParameterization"]; 
             if (AutoToolParameterization!=null)
                 IsAutoToolParameterization = AutoToolParameterization.ValueAsBoolean;
-    
+
+            var TPMode = XMLProp.Ptr["GeneralParameters.ToolpathParsingMode"]; 
+            if (TPMode!=null)
+            {
+                if (TPMode.ValueAsString=="Simplified")
+                    tpm = ToolpathParsingMode.tpmSimplified;
+                else
+                    tpm = ToolpathParsingMode.tpmGCodeBased;
+            }
+
+            var OutputAdditionalParameters = XMLProp.Ptr["GeneralParameters.OutputAdditionalParameters"]; 
+            if (OutputAdditionalParameters!=null)
+                IsOutputAdditionalCLDataParameters = OutputAdditionalParameters.ValueAsBoolean;
+
+            var OutputFilamentExtruding = XMLProp.Ptr["GeneralParameters.OutputFilamentExtruding"]; 
+            if (OutputFilamentExtruding!=null)
+                IsOutputFilamentExtruding = OutputFilamentExtruding.ValueAsBoolean;
+
+            var fel = XMLProp.Ptr["GeneralParameters.FilamentExtrudingLength"]; 
+            if (fel!=null)
+                FilamentExtrudingLength = fel.ValueAsDouble;
+
             CEParamsReceiver.CEParameters.UpdateAllParameters();
         }
     }
@@ -1023,6 +1147,10 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         FillPoints(tr);
         CEParamsReceiver.CEParameters.ParseAllParameters();
         CEControlProcess.clf = clf;
+        CEControlProcess.IsOutputAdditionalCLDataParameters = IsOutputAdditionalCLDataParameters;
+        CEControlProcess.IsOutputFilamentExtruding = IsOutputFilamentExtruding;
+        CEControlProcess.tpm = tpm;
+        CEControlProcess.FilamentExtrudingLength = FilamentExtrudingLength;
         CEControlProcess.updateHandler = updateHandler;
         try{
             lib.Slice(CEControlProcess, CEParamsReceiver, CuraPath);
@@ -1049,6 +1177,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     public void MakeWorkPath() {
         if (opContainer == null || clf == null)
              return;
+        
         StartCalculateInCuraEngine();
     }
 
@@ -1076,10 +1205,6 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private string Name{ get; set; }
     private int Count{ get; set; }
     private bool Visible{ get; set; }
-    private bool DoubleTryParse(string valueStr, out double resultDouble)
-    {
-        return double.TryParse(valueStr.Replace(",", "."), NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out resultDouble);
-    }
     private IST_CustomProp GetStringProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
     {
         var sp = helpers.CreateStringProp(param.label);
@@ -1237,7 +1362,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         {
             var value = CEParamsReceiver.CEParameters.GetValue(param.id, true);
             double doubleValue;
-            if (DoubleTryParse(value, out doubleValue))
+            if (DoubleParser.DoubleTryParse(value, out doubleValue))
             {
                 return doubleValue; 
             }
@@ -1587,6 +1712,10 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private bool IsSupportPropsExpanded = true;
     private bool IsAdhesionPropsExpanded = true;
     private bool IsAutoToolParameterization = true;
+    public ToolpathParsingMode tpm = ToolpathParsingMode.tpmSimplified;
+    public bool IsOutputAdditionalCLDataParameters = false;
+    public bool IsOutputFilamentExtruding = false;
+    public double FilamentExtrudingLength = 100; 
     private IST_SimplePropIterator FillSimplifiedPropIterator(IST_SimplePropIterator SimpleIterator)
     {
         Parameter param;
@@ -1729,6 +1858,110 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
         return SimpleIterator;
     }
+    private IST_SimplePropIterator AddToolpathParsingMode(IST_SimplePropIterator SimpleIterator)
+    {
+        int parentInd = -1;
+        var cldataModeProp = helpers.CreateEnumWithIDProp("Toolpath parsing mode");
+        if (cldataModeProp!=null)
+        {
+            cldataModeProp.PropID = "_toolpath_parsing_mode";
+            cldataModeProp.IsStructural = new BooleanValueGetter(() => true);
+            cldataModeProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = true;
+                if (SearchFilter!="" && !cldataModeProp.Caption.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
+            cldataModeProp.Add("Simplified", "Simplified", ""); 
+            cldataModeProp.Add("GCodeBased", "GCode based", ""); 
+            cldataModeProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedSettingVisibilities);
+            cldataModeProp.ValueGetter = new StringValueGetter(delegate ()
+            {
+                if (tpm==ToolpathParsingMode.tpmSimplified)
+                    return "Simplified";
+                else
+                    return "GCodeBased";
+            });   
+            cldataModeProp.ValueSetter = new StringValueSetter(delegate (string v)
+            {
+                if (v=="Simplified")
+                    tpm = ToolpathParsingMode.tpmSimplified;
+                else
+                    tpm = ToolpathParsingMode.tpmGCodeBased;
+                SaveToolpathParsingModeToXML();
+            });
+            parentInd = SimpleIterator.AddNewProp(cldataModeProp, -1);
+        }
+
+        var atpProp = helpers.CreateBooleanProp("Output additional parameters");
+        if (atpProp!=null)
+        {
+            atpProp.PropID = "_output_additional_parameters";
+            atpProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = false;
+                if (tpm==ToolpathParsingMode.tpmSimplified)
+                    isVisible = true;
+                if (SearchFilter!="" && !atpProp.Caption.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
+            atpProp.ValueGetter = new BooleanValueGetter(() => IsOutputAdditionalCLDataParameters);
+            atpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
+            {
+                IsOutputAdditionalCLDataParameters = v;
+                SaveOutputAdditionalParametersToXML();
+            });
+            SimpleIterator.AddNewProp(atpProp, parentInd);
+        }
+
+        var ofeProp = helpers.CreateBooleanProp("Output filament extruding");
+        if (ofeProp!=null)
+        {
+            ofeProp.PropID = "_output_filament_extruding";
+            ofeProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = false;
+                if (tpm==ToolpathParsingMode.tpmGCodeBased)
+                    isVisible = true;
+                if (SearchFilter!="" && !ofeProp.Caption.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
+            ofeProp.ValueGetter = new BooleanValueGetter(() => IsOutputFilamentExtruding);
+            ofeProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
+            {
+                IsOutputFilamentExtruding = v;
+                SaveOutputFilamentExtrudingToXML();
+            });
+            SimpleIterator.AddNewProp(ofeProp, parentInd);
+        }
+
+        var felProp = helpers.CreateDoubleProp("Filament extruding length per frame");
+        if (felProp!=null)
+        {
+            felProp.PropID = "_filament_extruding_length";
+            felProp.UnitsStr = "mm";
+            felProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = false;
+                if (tpm==ToolpathParsingMode.tpmGCodeBased && IsOutputFilamentExtruding)
+                    isVisible = true;
+                if (SearchFilter!="" && !felProp.Caption.ToLower().Contains(SearchFilter))
+                    isVisible = false;
+                return isVisible;
+            });
+            felProp.ValueGetter = new DoubleValueGetter(() => FilamentExtrudingLength);
+            felProp.ValueSetter = new DoubleValueSetter(delegate (double v)
+            {
+                FilamentExtrudingLength = v;
+                SaveFilamentExtrudingLengthToXML();
+            });
+            SimpleIterator.AddNewProp(felProp, parentInd);
+        }
+        return SimpleIterator;
+    }
     private IST_SimplePropIterator AddGeneralParameters(IST_SimplePropIterator SimpleIterator)
     {
         var genProp = helpers.CreateComplexProp("General parameters");
@@ -1800,7 +2033,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 CEParamsReceiver.CEParameters.IsShowCustomParameters = v;
                 SaveShowCustomParametersToXML();
             }); 
-            SimpleIterator.AddNewProp(scpProp, parentInd);
+            parentInd = SimpleIterator.AddNewProp(scpProp, parentInd);
         }
 
         //setting visibility
@@ -1811,7 +2044,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             svProp.IsStructural = new BooleanValueGetter(() => true);
             svProp.Visible = new BooleanValueGetter(delegate ()
             {
-                bool isVisible = true;
+                bool isVisible = CEParamsReceiver.CEParameters.IsShowCustomParameters;
                 if (SearchFilter!="" && !svProp.Caption.ToLower().Contains(SearchFilter))
                     isVisible = false;
                 return isVisible;
@@ -2149,7 +2382,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
 
         var SimpleIterator = helpers.CreateSimplePropIterator();
         SimpleIterator = AddGeneralParameters(SimpleIterator);
-        SimpleIterator = AddAutoToolParameterization(SimpleIterator);      
+        SimpleIterator = AddAutoToolParameterization(SimpleIterator); 
+        SimpleIterator = AddToolpathParsingMode(SimpleIterator);       
         SimpleIterator = AddCustomParamtersField(SimpleIterator);
         
         var ssv = CEParamsReceiver.CEParameters.SelectedSettingVisibilities;

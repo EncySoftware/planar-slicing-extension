@@ -90,6 +90,10 @@
 			<SCType ID="SettingVisibility" Caption="Setting visibility" type="CDATAString" DefaultValue=""/>
 			<SCType ID="AutoToolParameterization" Caption="Auto tool parameterization" type="boolean" DefaultValue="True"/>
 			<SCType ID="Adhesion" Caption="Adhesion" type="boolean" DefaultValue="False"/>
+			<SCType ID="ToolpathParsingMode" Caption="Toolpath parsing mode" type="CDATAString" DefaultValue="Simplified"/>
+			<SCType ID="OutputAdditionalParameters" Caption="Output additional parameters" type="boolean" DefaultValue="False"/>
+			<SCType ID="FilamentExtrudingLength" Caption="Filament extruding length per frame" type="double" DefaultValue="100"/>
+			<SCType ID="OutputFilamentExtruding" Caption="Output filament extruding" type="boolean" DefaultValue="False"/>
 		</SCType>
 		<ConditionsSection>
 			<EffectiveFeeds DefaultValue="WorkingRetractEngage"/>

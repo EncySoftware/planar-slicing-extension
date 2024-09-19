@@ -2,7 +2,13 @@ using System.Text.RegularExpressions;
 using NCalc;
 using System.Globalization;
 namespace CuraEngineParametersLibrary;
-
+public static class DoubleParser
+{
+    public static bool DoubleTryParse(string valueStr, out double resultDouble)
+    {
+        return double.TryParse(valueStr.Replace(",", "."), NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out resultDouble);
+    }
+}
 public class ParametersParser
 {
     private bool HasExpressionMark(string value)
@@ -23,10 +29,7 @@ public class ParametersParser
             return false;
         }
     }
-    private bool DoubleTryParse(string valueStr, out double resultDouble)
-    {
-        return double.TryParse(valueStr.Replace(",", "."), NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out resultDouble);
-    }
+
     private bool IsExpression(string value, ParameterType paramType, bool checkParamNameSymbol = true)
     {
         bool resultBool;
@@ -34,7 +37,7 @@ public class ParametersParser
         double resultDouble;
         if (bool.TryParse(value, out resultBool) ||
             int.TryParse(value, out resultInt) ||
-            DoubleTryParse(value, out resultDouble) ||
+            DoubleParser.DoubleTryParse(value, out resultDouble) ||
             value.StartsWith("[") && value.EndsWith("]") && !value.Contains("if") ||
             value=="")
         {
@@ -69,7 +72,7 @@ public class ParametersParser
             if (name == "Radians" && args.Parameters.Length==1)
             {
                 double value;
-                DoubleTryParse(args.Parameters[0].Evaluate().ToString(), out value);
+                DoubleParser.DoubleTryParse(args.Parameters[0].Evaluate().ToString(), out value);
                 args.Result = value*0.0174533;
             }
         };
@@ -79,7 +82,7 @@ public class ParametersParser
             {
                 var val = args.Parameters[0].Evaluate().ToString();
                 double resultDouble;
-                if (DoubleTryParse(val, out resultDouble))
+                if (DoubleParser.DoubleTryParse(val, out resultDouble))
                 {         
                     args.Result = resultDouble;
                 }
@@ -96,7 +99,7 @@ public class ParametersParser
                 var val = args.Parameters[0].Evaluate().ToString();
                 val = val.Replace(",", ".");
                 double doubleVal;
-                DoubleTryParse(val, out doubleVal);
+                DoubleParser.DoubleTryParse(val, out doubleVal);
                 args.Result = doubleVal;
             }
         };
@@ -109,7 +112,7 @@ public class ParametersParser
                 for (int i = 0; i < count; i ++)
                 {
                     double arg;
-                    DoubleTryParse(args.Parameters[i].Evaluate().ToString(), out arg);
+                    DoubleParser.DoubleTryParse(args.Parameters[i].Evaluate().ToString(), out arg);
                     if (arg > maxArg)
                     {
                         maxArg = arg;
@@ -134,7 +137,7 @@ public class ParametersParser
                 for (int i = 0; i < count; i ++)
                 {
                     double arg;
-                    DoubleTryParse(args.Parameters[i].Evaluate().ToString(), out arg);
+                    DoubleParser.DoubleTryParse(args.Parameters[i].Evaluate().ToString(), out arg);
                     if (arg < minArg)
                     {
                         minArg = arg;
@@ -149,7 +152,7 @@ public class ParametersParser
             {
                 var expression = args.Parameters[0].Evaluate().ToString().Replace("'", "");
                 double val;
-                if (DoubleTryParse(expression, out val))
+                if (DoubleParser.DoubleTryParse(expression, out val))
                 {
                     args.Result = val;
                 }
@@ -165,7 +168,7 @@ public class ParametersParser
             {
                 var expression = args.Parameters[1].Evaluate().ToString().Replace("'", "");
                 double val;
-                if (DoubleTryParse(expression, out val))
+                if (DoubleParser.DoubleTryParse(expression, out val))
                 {
                     args.Result = val;
                 }
@@ -181,7 +184,7 @@ public class ParametersParser
             {
                 var expression = args.Parameters[1].Evaluate().ToString().Replace("'", "");
                 double val;
-                if (DoubleTryParse(expression, out val))
+                if (DoubleParser.DoubleTryParse(expression, out val))
                 {
                     args.Result = val;
                 }
@@ -197,7 +200,7 @@ public class ParametersParser
             {
                 var expression = args.Parameters[0].Evaluate().ToString().Replace("'", "");
                 double val;
-                if (DoubleTryParse(expression, out val))
+                if (DoubleParser.DoubleTryParse(expression, out val))
                 {
                     args.Result = val;
                 }
@@ -220,7 +223,7 @@ public class ParametersParser
             {
                 var expression = args.Parameters[0].Evaluate().ToString().Replace("'", "");
                 double val;
-                if (DoubleTryParse(expression, out val))
+                if (DoubleParser.DoubleTryParse(expression, out val))
                 {
                     args.Result = val;
                 }
@@ -236,7 +239,7 @@ public class ParametersParser
             {
                 var expression = args.Parameters[0].Evaluate().ToString().Replace("'", "");
                 double val;
-                if (DoubleTryParse(expression, out val))
+                if (DoubleParser.DoubleTryParse(expression, out val))
                 {
                     args.Result = val;
                 }
@@ -292,7 +295,7 @@ public class ParametersParser
                     if (!expression.HasErrors())
                     {
                         var result = expression.Evaluate().ToString();
-                        DoubleTryParse(result, out doubleValue);
+                        DoubleParser.DoubleTryParse(result, out doubleValue);
                         if (doubleValue>maxValue)
                         {
                             maxValue = doubleValue; 
@@ -332,7 +335,7 @@ public class ParametersParser
                     if (!expression.HasErrors())
                     {
                         var result = expression.Evaluate().ToString();;
-                        DoubleTryParse(result, out doubleValue);
+                        DoubleParser.DoubleTryParse(result, out doubleValue);
                         if (doubleValue<minValue)
                         {
                             minValue = doubleValue; 
@@ -731,7 +734,7 @@ public class ParametersParser
     {
         bool resultBool;
         double resultDouble;
-        if (DoubleTryParse(value, out resultDouble))
+        if (DoubleParser.DoubleTryParse(value, out resultDouble))
         {
             if (value.StartsWith("-"))
             {
@@ -889,7 +892,7 @@ public class ParametersParser
         }
         value = value.Replace(",", ".");
         double doubleValue;
-        DoubleTryParse(value, out doubleValue);
+        DoubleParser.DoubleTryParse(value, out doubleValue);
         return doubleValue;
     }
     public double GetMinimumValueWarning(string ParameterName, ref Dictionary<string, Parameter> CurrentParams, ref Dictionary<string, Parameter> SecondParams)
@@ -903,7 +906,7 @@ public class ParametersParser
         }
         value = value.Replace(",", ".");
         double doubleValue;
-        DoubleTryParse(value, out doubleValue);
+        DoubleParser.DoubleTryParse(value, out doubleValue);
         return doubleValue;
     }
     public double GetMaximumValue(string ParameterName, ref Dictionary<string, Parameter> CurrentParams, ref Dictionary<string, Parameter> SecondParams)
@@ -917,7 +920,7 @@ public class ParametersParser
         }
         value = value.Replace(",", ".");
         double doubleValue;
-        DoubleTryParse(value, out doubleValue);
+        DoubleParser.DoubleTryParse(value, out doubleValue);
         return doubleValue;
     }
     public double GetMaximumValueWarning(string ParameterName, ref Dictionary<string, Parameter> CurrentParams, ref Dictionary<string, Parameter> SecondParams)
@@ -931,7 +934,7 @@ public class ParametersParser
         }
         value = value.Replace(",", ".");
         double doubleValue;
-        DoubleTryParse(value, out doubleValue);
+        DoubleParser.DoubleTryParse(value, out doubleValue);
         return doubleValue;
     }
 }
