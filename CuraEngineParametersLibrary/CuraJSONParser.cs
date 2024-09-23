@@ -15,6 +15,9 @@ public class SettingsJson
 {
     [JsonPropertyName("PathToCura")]
     public string PathToCura { get; set; }
+
+    [JsonPropertyName("UserPathToCura")]
+    public string UserPathToCura { get; set; }
 }
 public class CuraJSONParser
 {

@@ -458,8 +458,12 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     IST_CustomPropHelpers? helpers;
     string SearchFilter = "";
     string CuraPath = "";
+    string UserCuraPathFromJSon = "";
+    string AutoCuraPath = "";
+    string UserCuraPath = "";
     bool isOperationCreating = true;
-    string WarningMessage = "Cura not found installed. Check that the path to Cura is correct.";
+    bool UserPathEnabled = false;
+    string WarningMessage = "Cura not found installed. Set path to CuraEngine.exe manually.\nParameters tab -> Set Cura path";
     IST_SimplePropIterator? ParamSimplePropIterator = null;
     // ------------ IST_Operation --------------------------
 
@@ -468,10 +472,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         CEControlProcess = new CuraEngineControlProcess(); 
         CEParamsReceiver = new ParamsReceiver();
         GetPathToCura();
-        if (CuraPath=="" || !Directory.Exists(CuraPath))
+        if (!CheckCuraPath())
         {
             Console.WriteLine(WarningMessage);
             Info.InstanceInfo.ExtensionManager.Logger.Warning(WarningMessage);  
+            ShowMessageBox(WarningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
         }
         else
         {
@@ -484,6 +489,13 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         Info.InstanceInfo.ExtensionManager.Logger.Info("Cura operation is created.");  
     }
 
+    private int ShowMessageBox(string Msg, TMessageDialogType DlgType, ushort Buttons, TUIButtonType DefaultButton, string ATitle)
+    {
+        var extension = Info.InstanceInfo.ExtensionManager.GetSingletonExtension("Extension.UIDialogs.Core", out TResultStatus ret);
+        var uiDialog = (ICAMAPI_UIDialogsHelper)extension;
+        ushort buttons = (ushort)TUIButtonTypeFlags.btfOk;
+        return uiDialog.MessageBox(Msg, DlgType, buttons, DefaultButton, ATitle);
+    }
     private void SetToolParameterization(string paramName)
     {
         if (IsAutoToolParameterization)
@@ -507,6 +519,84 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             }
         }
     }
+    private bool CuraEnginePathCorrect(string path)
+    {
+        var CEPath = @Path.GetDirectoryName(path) + @"\CuraEngine.exe";
+        if (File.Exists(CEPath))
+            return true;
+        return false;
+    }
+    private bool CheckCuraPath()
+    {
+        UserPathEnabled = opContainer.XMLProp.Ptr["CuraPath.SetPath"].ValueAsBoolean;
+        if (AutoCuraPath=="" || !Directory.Exists(AutoCuraPath) || !CuraEnginePathCorrect(AutoCuraPath) || UserPathEnabled)
+        {
+            var UserCuraPathFromXML = opContainer.XMLProp.Ptr["CuraPath.Path"].ValueAsString;
+            if (UserCuraPathFromXML!="" && File.Exists(UserCuraPathFromXML) && CuraEnginePathCorrect(UserCuraPathFromXML))
+            {
+                CuraPath = @Path.GetDirectoryName(UserCuraPathFromXML) + @"\";
+                UserPathEnabled = true;
+                opContainer.XMLProp.Ptr["CuraPath.SetPath"].ValueAsBoolean = UserPathEnabled;
+                opContainer.XMLProp.Ptr["CuraPath.Path"].ValueAsString = @UserCuraPathFromXML;
+                if (@UserCuraPathFromXML!=@UserCuraPath)
+                {
+                    UserCuraPath = UserCuraPathFromXML;
+                    UpdateCuraPathJson(UserCuraPathFromXML);
+                }          
+            }
+            else
+            {
+                UserPathEnabled = opContainer.XMLProp.Ptr["CuraPath.SetPath"].ValueAsBoolean; 
+                if (!UserPathEnabled || UserCuraPathFromXML=="" || !File.Exists(UserCuraPathFromXML) || !CuraEnginePathCorrect(UserCuraPathFromXML))
+                {
+                    if (UserCuraPathFromXML!=null)
+                        UserCuraPath = UserCuraPathFromXML;
+                    return false;
+                }
+                else
+                {
+                    CuraPath = @Path.GetDirectoryName(UserCuraPathFromXML) + @"\";
+                    if (@UserCuraPathFromXML!=@UserCuraPath)
+                    {
+                        UserCuraPath = UserCuraPathFromXML;
+                        UpdateCuraPathJson(UserCuraPathFromXML);
+                    }        
+                }
+            }
+        }
+        else
+        {
+            UserCuraPath = UserCuraPathFromJSon;
+            CuraPath = AutoCuraPath;
+        }
+        return true;
+    }
+    private void UpdateCuraPathJson(string UserPath)
+    {
+        string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+        string assemblyDirectory = Path.GetDirectoryName(assemblyLocation)+"\\";
+        string CuraSettingsJsonFile = assemblyDirectory+"CuraSettings.json";
+        if (File.Exists(CuraSettingsJsonFile))
+        {
+            File.Delete(CuraSettingsJsonFile);
+            CuraPath = ReadPathFromRegistry();
+            var curaSettings = new CuraSettingsJson();
+            curaSettings.Name = "CuraSettings";
+            curaSettings.Settings = new SettingsJson
+            {
+                PathToCura = AutoCuraPath,
+                UserPathToCura = UserPath
+            };
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+
+            string jsonString = JsonSerializer.Serialize(curaSettings, options);
+            File.WriteAllText(CuraSettingsJsonFile, jsonString);
+        }
+    }
     private void GetPathToCura()
     {
         string assemblyLocation = Assembly.GetExecutingAssembly().Location;
@@ -514,12 +604,13 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         string CuraSettingsJsonFile = assemblyDirectory+"CuraSettings.json";
         if (!File.Exists(CuraSettingsJsonFile))
         {
-            CuraPath = ReadPathFromRegistry();
+            AutoCuraPath = ReadPathFromRegistry();
             var curaSettings = new CuraSettingsJson();
             curaSettings.Name = "CuraSettings";
             curaSettings.Settings = new SettingsJson
             {
-                PathToCura = CuraPath
+                PathToCura = AutoCuraPath,
+                UserPathToCura = ""
             };
 
             var options = new JsonSerializerOptions
@@ -542,13 +633,20 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                     if (childProperty.Name=="PathToCura")
                     {
                         var value = childProperty.Value.GetString();
-                        CuraPath = value;
+                        AutoCuraPath = value;
+                    }
+                    if (childProperty.Name=="UserPathToCura")
+                    {
+                        var value = childProperty.Value.GetString();
+                        UserCuraPath = value;
+                        UserCuraPathFromJSon = value;
+                        opContainer.XMLProp.Ptr["CuraPath.Path"].ValueAsString = @UserCuraPath;
                     }
                 }
             }
             if (CuraPath.Trim()=="")
             {
-                CuraPath = ReadPathFromRegistry();
+                AutoCuraPath = ReadPathFromRegistry();
                 string json = File.ReadAllText(CuraSettingsJsonFile);
                 var options = new JsonSerializerOptions
                 {
@@ -556,7 +654,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                     WriteIndented = true
                 };
                 CuraSettingsJson curaSettings = JsonSerializer.Deserialize<CuraSettingsJson>(json, options);
-                curaSettings.Settings.PathToCura = CuraPath;
+                curaSettings.Settings.PathToCura = AutoCuraPath;
                 string updatedJson = JsonSerializer.Serialize(curaSettings, options);
                 File.WriteAllText(CuraSettingsJsonFile, updatedJson);
             }
@@ -658,7 +756,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveUserParameterToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var ar = XMLProp.Arr["CuraUserParameterArray"];
             if (ar!=null)
@@ -678,7 +776,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveManufacturerToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var manufacturer = XMLProp.Ptr["GeneralParameters.Manufacturer"]; 
             if (manufacturer!=null && CEParamsReceiver.CEParameters.SelectedMachineBrand!=null)
@@ -690,7 +788,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveMachineToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var machine = XMLProp.Ptr["GeneralParameters.Machine"]; 
             if (machine!=null && CEParamsReceiver.CEParameters.SelectedMachine!=null)
@@ -702,7 +800,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveExtruderToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var extruder = XMLProp.Ptr["GeneralParameters.Extruder"]; 
             if (extruder!=null && CEParamsReceiver.CEParameters.SelectedExtruder!=null)
@@ -714,7 +812,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveMaterialBrandToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var materialBrand = XMLProp.Ptr["GeneralParameters.MaterialBrand"]; 
             if (materialBrand!=null && CEParamsReceiver.CEParameters.SelectedMaterialBrand!=null)
@@ -726,7 +824,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveMaterialToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var material = XMLProp.Ptr["GeneralParameters.Material"]; 
             if (material!=null && CEParamsReceiver.CEParameters.SelectedMaterial!=null)
@@ -738,7 +836,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveVariantToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var variant = XMLProp.Ptr["GeneralParameters.Variant"]; 
             if (variant!=null && CEParamsReceiver.CEParameters.SelectedVariant!=null)
@@ -750,7 +848,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveProfileToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var intentCategory = XMLProp.Ptr["GeneralParameters.Profile"]; 
             if (intentCategory!=null && CEParamsReceiver.CEParameters.SelectedIntentCategory!=null)
@@ -762,7 +860,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveQualityToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var resolution = XMLProp.Ptr["GeneralParameters.Quality"]; 
             if (resolution!=null && CEParamsReceiver.CEParameters.SelectedQuality!=null)
@@ -774,7 +872,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveShowCustomParametersToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var showCustomParameters = XMLProp.Ptr["GeneralParameters.ShowCustomParameters"]; 
             if (showCustomParameters!=null)
@@ -784,7 +882,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveSettingVisibilityToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var settingVisibility = XMLProp.Ptr["GeneralParameters.SettingVisibility"]; 
             if (settingVisibility!=null && CEParamsReceiver.CEParameters.SelectedSettingVisibilities!="")
@@ -796,7 +894,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveAutoToolParameterizationToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var AutoToolParameterization = XMLProp.Ptr["GeneralParameters.AutoToolParameterization"]; 
             if (AutoToolParameterization!=null)
@@ -812,7 +910,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveFilamentExtrudingLengthToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var fel = XMLProp.Ptr["GeneralParameters.FilamentExtrudingLength"]; 
             if (fel!=null)
@@ -822,7 +920,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveOutputAdditionalParametersToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var OutputAdditionalParameters = XMLProp.Ptr["GeneralParameters.OutputAdditionalParameters"]; 
             if (OutputAdditionalParameters!=null)
@@ -832,7 +930,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveOutputFilamentExtrudingToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
     if (XMLProp==null)
         XMLProp = opContainer.XMLProp;
-    if (CuraPath!="" && Directory.Exists(CuraPath))
+    if (CheckCuraPath())
     {
         var OutputFilamentExtruding = XMLProp.Ptr["GeneralParameters.OutputFilamentExtruding"]; 
         if (OutputFilamentExtruding!=null)
@@ -842,7 +940,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private void SaveToolpathParsingModeToXML(STXMLPropTypes.IST_XMLPropPointer XMLProp = null) {
         if (XMLProp==null)
             XMLProp = opContainer.XMLProp;
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
             var tpMode = XMLProp.Ptr["GeneralParameters.ToolpathParsingMode"]; 
             if (tpMode!=null)
@@ -873,6 +971,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         SaveOutputAdditionalParametersToXML(XMLProp);
         SaveOutputFilamentExtrudingToXML(XMLProp);
         SaveFilamentExtrudingLengthToXML(XMLProp);
+        XMLProp.Ptr["CuraPath.SetPath"].ValueAsBoolean = UserPathEnabled;
+        XMLProp.Ptr["CuraPath.Path"].ValueAsString = UserCuraPath;
     }
     private void LoadAdhesionValueFromXML(STXMLPropTypes.IST_XMLPropPointer XMLProp)
     {
@@ -889,8 +989,10 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
     }
     public void LoadFromXML(STXMLPropTypes.IST_XMLPropPointer XMLProp) {
-        if (CuraPath!="" && Directory.Exists(CuraPath))
+        if (CheckCuraPath())
         {
+            UserPathEnabled = XMLProp.Ptr["CuraPath.SetPath"].ValueAsBoolean;
+            UserCuraPath = XMLProp.Ptr["CuraPath.Path"].ValueAsString;
             var ar = XMLProp.Arr["CuraUserParameterArray"];
             if (ar!=null)
             {
@@ -1162,10 +1264,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     }
     private void StartCalculateInCuraEngine() 
     {    
-        if (CuraPath=="" || !Directory.Exists(CuraPath))
+        if (!CheckCuraPath())
         {
             Console.WriteLine(WarningMessage);
             Info.InstanceInfo.ExtensionManager.Logger.Warning(WarningMessage); 
+            ShowMessageBox(WarningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
         }
         else
         {
@@ -2371,10 +2474,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     
     bool IST_Operation.GetPropIterator(string PageID, out IST_CustomPropIterator PropIterator)
     {
-        if (CuraPath=="" || !Directory.Exists(CuraPath))
+        if (!CheckCuraPath())
         {
             Console.WriteLine(WarningMessage);
             Info.InstanceInfo.ExtensionManager.Logger.Warning(WarningMessage); 
+            ShowMessageBox(WarningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
             PropIterator = null;
             return false;
         }
