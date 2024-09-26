@@ -130,7 +130,7 @@
 			</Output>
 		</Toolpath>
 		<SCType ID="CuraPath" Caption="Set Cura path" type="ComplexType" Category="TPropertiesCategoryList.Misc" Priority="100"
-                                ImageFile="" Compact="true">
+                                ImageFile="CuraPath_icon.png" Compact="true">
 				<SCType ID="SetPath" Caption="Set path" type="boolean" DefaultValue="False"/>
 				<SCType ID="Path" Caption="Path to CuraEngine.exe" type="FileName" DefaultValue="" Visible="[SetPath]" Filter="CuraEngine.exe (*.exe)|*.exe"/>
 		</SCType>

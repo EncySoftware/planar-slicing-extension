@@ -20,6 +20,8 @@ using System.Text.Json;
 using STModelFormerTypes;
 using STXMLPropTypes;
 using CAMAPI.Logger;
+using CAMAPI.Application;
+using System.Globalization;
 public enum ToolpathParsingMode
 {
     tpmSimplified,
@@ -433,6 +435,16 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     ~CuraEngineToolpath()
     {
         helpers = null;
+        if (UserLangCatalog!=null)
+        {
+            UserLangCatalog.Clear();
+            UserLangCatalog = null;
+        }
+        if (LangCatalog!=null)
+        {
+            LangCatalog.Clear();
+            LangCatalog = null;
+        }
     }
     // ------------ IExtension --------------------------
     private IExtensionInfo? fInfo = null;
@@ -464,13 +476,22 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     bool isOperationCreating = true;
     bool UserPathEnabled = false;
     string WarningMessage = "Cura not found installed. Set path to CuraEngine.exe manually.\nParameters tab -> Set Cura path";
+    Dictionary<string, string> LangCatalog = null;
+    Dictionary<string, string> UserLangCatalog = null;
     IST_SimplePropIterator? ParamSimplePropIterator = null;
+    string CurrentLang = "en-US";
     // ------------ IST_Operation --------------------------
 
     public void Create(IST_OpContainer Container) {
         opContainer = Container;
         CEControlProcess = new CuraEngineControlProcess(); 
         CEParamsReceiver = new ParamsReceiver();
+        GetLangApplication();
+
+        string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+        string UserLangPath = Path.GetDirectoryName(assemblyLocation)+"\\UserLocalization\\";
+        UserLangCatalog = ReadTranslations(UserLangPath, true);
+        WarningMessage = GetLabelTranslation("Path_warning_message", WarningMessage);
         GetPathToCura();
         if (!CheckCuraPath())
         {
@@ -488,7 +509,132 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         CEControlProcess.Logger = Info.InstanceInfo.ExtensionManager.Logger;
         Info.InstanceInfo.ExtensionManager.Logger.Info("Cura operation is created.");  
     }
+    private void GetLangApplication()
+    {
+        var appSingleton = fInfo.InstanceInfo.ExtensionManager.GetSingletonExtension("Extension.Global.Singletons.Application", out _);
+        var appApi = appSingleton as ICamApiApplicationSingleton;
+        var app = appApi.GetApplication(out _); 
+        var langCode = app.LanguageCode;
+        if (langCode!=null && langCode!=0)
+        {
+            CultureInfo cultureInfo = new CultureInfo(langCode);
+            if (cultureInfo!=null && cultureInfo.Name!="")
+                CurrentLang = cultureInfo.Name;
+        }
+    }
+    private Dictionary<string, string> ReadTranslations(string FilePath, bool isUserTranslations = false)
+    {
+        var isFileExists = false;
+        var path = "";
+        var filename = "";
+        if (isUserTranslations)
+            filename = ".po";
+        else
+            filename = "\\fdmprinter.def.json.po";  
 
+        path = FilePath + CurrentLang + filename;
+        if (File.Exists(path))
+        {
+            isFileExists = true;
+        }
+        else
+        {
+            var lang = CurrentLang.Replace("-", "_");
+            path = FilePath + lang + filename;
+            if (File.Exists(path))
+            {
+                isFileExists = true;
+            }
+        }
+
+        Dictionary<string, string> translations = null;
+        if (isFileExists)
+        {
+            translations = new Dictionary<string, string>();
+            var reader = new StreamReader(path);
+            var line = reader.ReadLine();
+            var key = "";
+            var value = "";
+            var hasKey = false;
+            var hasValue = false;
+            while (line!=null)
+            {
+                if (line.StartsWith("msgctxt \""))
+                {
+                    hasKey = true;
+                    key = line.Substring(9, line.Length-10).Trim().ToLower();
+                }
+                if (line.StartsWith("msgstr \""))
+                {
+                    hasValue = true;
+                    value = line.Substring(8, line.Length-9).Trim();
+                }
+                if (line.Trim()=="")
+                {
+                    hasKey = false;
+                    hasValue = false;
+                }
+                if (hasKey && hasValue)
+                    translations[key] = value;
+                line = reader.ReadLine();
+            }
+        }  
+        return translations;
+    }
+    private string GetTranslation(string id, string label = "")
+    {
+        var result = "";
+        id = id.ToLower();
+        label = label.ToLower();
+        if (UserLangCatalog!=null)
+        {
+            if (label!="")
+            {
+                if (UserLangCatalog.TryGetValue(label, out result))
+                    return result;
+            }
+            if (UserLangCatalog.TryGetValue(id, out result))
+                return result;
+        }
+        if (LangCatalog!=null)
+            LangCatalog.TryGetValue(id, out result);
+        return result;
+    }
+    private string GetLabelTranslation(string id, string label = "")
+    {
+        var label_ = "";
+        if (label!="")
+            label_ = label + " label";
+        var caption = GetTranslation(id + " label", label_);
+        if (caption==null || caption=="")
+        {
+            if (label!="")
+                caption = label;
+            else
+                caption = id;
+        }
+        return caption;
+    }
+    private string GetLabelTranslation(string id, string label, string description)
+    {
+        var desc = GetTranslation(id + " description", label + " description");
+        if (desc==null || desc=="")
+        {
+            desc = description;
+        }
+        return desc;
+    }
+    private string GetEnumsTranslation(string ParamId, string ParamLabel, string enumItemId, string enumItemName)
+    {
+        var desc = GetTranslation(ParamId + " option " + enumItemName, ParamLabel + " option " + enumItemName);
+        if (desc==null || desc=="")
+        {
+            desc = GetTranslation(ParamId + " option " + enumItemId, ParamLabel + " option " + enumItemId);
+            if (desc==null || desc=="")
+                desc = enumItemName;
+        }
+        return desc;
+    }
     private int ShowMessageBox(string Msg, TMessageDialogType DlgType, ushort Buttons, TUIButtonType DefaultButton, string ATitle)
     {
         var extension = Info.InstanceInfo.ExtensionManager.GetSingletonExtension("Extension.UIDialogs.Core", out TResultStatus ret);
@@ -569,6 +715,11 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             UserCuraPath = UserCuraPathFromJSon;
             CuraPath = AutoCuraPath;
         }
+        if (LangCatalog==null)
+        {
+            var LangPath = CuraPath + "share\\cura\\resources\\i18n\\";
+            LangCatalog = ReadTranslations(LangPath);
+        } 
         return true;
     }
     private void UpdateCuraPathJson(string UserPath)
@@ -1310,7 +1461,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private bool Visible{ get; set; }
     private IST_CustomProp GetStringProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
     {
-        var sp = helpers.CreateStringProp(param.label);
+        var label = GetLabelTranslation(param.id, param.label);
+        var sp = helpers.CreateStringProp(label);
         if (param.icon != null && param.icon != "")
             sp.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         sp.PropID = param.id;
@@ -1367,7 +1519,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     }
     private IST_CustomProp GetIntegerProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
     {
-        var ip = helpers.CreateIntegerProp(param.label);
+        var label = GetLabelTranslation(param.id, param.label);
+        var ip = helpers.CreateIntegerProp(label);
         if (param.icon != null && param.icon != "")
             ip.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         ip.PropID = param.id;
@@ -1423,7 +1576,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     }
     private IST_CustomProp GetFloatProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
     {
-        var fp = helpers.CreateDoubleProp(param.label);
+        var label = GetLabelTranslation(param.id, param.label);
+        var fp = helpers.CreateDoubleProp(label);
         if (param.icon != null && param.icon != "")
             fp.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         fp.PropID = param.id;
@@ -1485,7 +1639,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     }
     private IST_CustomProp GetBoolProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
     {
-        var bp = helpers.CreateBooleanProp(param.label);
+        var label = GetLabelTranslation(param.id, param.label);
+        var bp = helpers.CreateBooleanProp(label);
         if (param.icon != null && param.icon != "")
             bp.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         bp.PropID = param.id;
@@ -1541,7 +1696,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     }
     private IST_CustomProp GetEnumProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
     {
-        var ep = helpers.CreateEnumWithIDProp(param.label);
+        var label = GetLabelTranslation(param.id, param.label);
+        var ep = helpers.CreateEnumWithIDProp(label);
         if (param.icon != null && param.icon != "")
             ep.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         ep.PropID = param.id;
@@ -1602,7 +1758,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         });
         foreach (EnumItem ei in param.options) 
         {
-            ep.Add(ei.id, ei.name, ""); 
+            var Caption = GetEnumsTranslation(param.id, param.label, ei.id, ei.name);
+            ep.Add(ei.id, Caption, ""); 
         }
         ep.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.GetValue(param.id, isGlobalParameter));
         ep.ValueSetter = new StringValueSetter(delegate (string v)
@@ -1615,7 +1772,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     }
     private IST_CustomProp GetComplexProp(Parameter param, bool isAlwaysVisible = false)
     {
-        var prop = helpers.CreateComplexProp(param.label);
+        var label = GetLabelTranslation(param.id, param.label);
+        var prop = helpers.CreateComplexProp(label);
         if (param.icon != null && param.icon != "")
             prop.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
         prop.PropID = param.id;
@@ -1822,8 +1980,9 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private IST_SimplePropIterator FillSimplifiedPropIterator(IST_SimplePropIterator SimpleIterator)
     {
         Parameter param;
-        var parentInd = -1;;
-        var strengthProp = helpers.CreateComplexProp("Strength");
+        var parentInd = -1;
+        var strengthCaption = GetLabelTranslation("Strength");
+        var strengthProp = helpers.CreateComplexProp(strengthCaption);
         if (strengthProp != null)
         {
             strengthProp.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
@@ -1855,7 +2014,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             if (topBottomProp != null)
                 SimpleIterator.AddNewProp(topBottomProp, parentInd);
         }
-        var supportProp = helpers.CreateComplexProp("Support");
+        var SupportCaption = GetLabelTranslation("Support");
+        var supportProp = helpers.CreateComplexProp(SupportCaption);
         if (supportProp != null)
         {
             supportProp.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
@@ -1883,7 +2043,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("adhesion_type", out param))
         {
-            var PropName = "Adhesion";
+            var PropName = GetLabelTranslation("Adhesion");
             var bp = helpers.CreateBooleanProp(PropName);
             bp.PropID = "_Adhesion";
             bp.IsStructural = new BooleanValueGetter(() => true);
@@ -1934,7 +2094,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     }
     private IST_SimplePropIterator AddAutoToolParameterization(IST_SimplePropIterator SimpleIterator)
     {
-        var atpProp = helpers.CreateBooleanProp("Auto tool parameterization");
+        var atpCaption = GetLabelTranslation("Auto tool parameterization");
+        var atpProp = helpers.CreateBooleanProp(atpCaption);
         if (atpProp!=null)
         {
             atpProp.PropID = "_auto_tool_parameterization";
@@ -1964,7 +2125,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private IST_SimplePropIterator AddToolpathParsingMode(IST_SimplePropIterator SimpleIterator)
     {
         int parentInd = -1;
-        var cldataModeProp = helpers.CreateEnumWithIDProp("Toolpath parsing mode");
+        var cldataModeCaption = GetLabelTranslation("Toolpath parsing mode");
+        var cldataModeProp = helpers.CreateEnumWithIDProp(cldataModeCaption);
         if (cldataModeProp!=null)
         {
             cldataModeProp.PropID = "_toolpath_parsing_mode";
@@ -1976,8 +2138,10 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                     isVisible = false;
                 return isVisible;
             });
-            cldataModeProp.Add("Simplified", "Simplified", ""); 
-            cldataModeProp.Add("GCodeBased", "GCode based", ""); 
+            var smplCaption = GetEnumsTranslation("_toolpath_parsing_mode", "Toolpath parsing mode", "Simplified", "Simplified");
+            cldataModeProp.Add("Simplified", smplCaption, ""); 
+            var gcodeCaption = GetEnumsTranslation("_toolpath_parsing_mode", "Toolpath parsing mode", "GCodeBased", "GCode based");
+            cldataModeProp.Add("GCodeBased", gcodeCaption, ""); 
             cldataModeProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedSettingVisibilities);
             cldataModeProp.ValueGetter = new StringValueGetter(delegate ()
             {
@@ -1997,7 +2161,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             parentInd = SimpleIterator.AddNewProp(cldataModeProp, -1);
         }
 
-        var atpProp = helpers.CreateBooleanProp("Output additional parameters");
+        var atpCaption = GetLabelTranslation("Output additional parameters");
+        var atpProp = helpers.CreateBooleanProp(atpCaption);
         if (atpProp!=null)
         {
             atpProp.PropID = "_output_additional_parameters";
@@ -2019,7 +2184,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             SimpleIterator.AddNewProp(atpProp, parentInd);
         }
 
-        var ofeProp = helpers.CreateBooleanProp("Output filament extruding");
+        var ofeCaption = GetLabelTranslation("Output filament extruding");
+        var ofeProp = helpers.CreateBooleanProp(ofeCaption);
         if (ofeProp!=null)
         {
             ofeProp.PropID = "_output_filament_extruding";
@@ -2041,7 +2207,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             SimpleIterator.AddNewProp(ofeProp, parentInd);
         }
 
-        var felProp = helpers.CreateDoubleProp("Filament extruding length per frame");
+        var felCaption = GetLabelTranslation("Filament extruding length per frame");
+        var felProp = helpers.CreateDoubleProp(felCaption);
         if (felProp!=null)
         {
             felProp.PropID = "_filament_extruding_length";
@@ -2067,7 +2234,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     }
     private IST_SimplePropIterator AddGeneralParameters(IST_SimplePropIterator SimpleIterator)
     {
-        var genProp = helpers.CreateComplexProp("General parameters");
+        var GenParamsCaption = GetLabelTranslation("General parameters");
+        var genProp = helpers.CreateComplexProp(GenParamsCaption);
         if (genProp!=null)
         {
             genProp.PropID = "_general_parameters";
@@ -2079,7 +2247,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 return isVisible;
             });
             genProp.IconFile = "";
-            genProp.TextGetter = new StringValueGetter(() => "Click \"...\" to change");
+            var textCaption = GetLabelTranslation("Click_to_open_general_parameters", "Click \"...\" to change");
+            genProp.TextGetter = new StringValueGetter(() => textCaption);
             genProp.ButtonQuantity = 1;
             genProp.ButtonDisplayName[0] = "...";
             genProp.ButtonHelpText[0] = "";
@@ -2090,7 +2259,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 var extension = Info.InstanceInfo.ExtensionManager.GetSingletonExtension("Extension.UIDialogs.Core", out TResultStatus ret);
                 var uiDialog = (ICAMAPI_UIDialogsHelper)extension;
 
-                var genParamsWindow = uiDialog.CreateWindow("General parameters");
+                var genParamsWindow = uiDialog.CreateWindow(GenParamsCaption);
                 var Iterator = helpers.CreateSimplePropIterator();
                 Iterator = FillGeneralparameters(Iterator);
                 Iterator.MoveToRoot();
@@ -2118,7 +2287,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
 
         var parentInd = -1;
         // show custom parameters
-        var scpProp = helpers.CreateBooleanProp("Show custom parameters");
+        var scpCaption = GetLabelTranslation("Show custom parameters");
+        var scpProp = helpers.CreateBooleanProp(scpCaption);
         if (scpProp!=null)
         {
             scpProp.PropID = "_show_custom_parameters";
@@ -2140,7 +2310,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
 
         //setting visibility
-        var svProp = helpers.CreateEnumWithIDProp("Setting visibility");
+        var svCaption = GetLabelTranslation("Setting visibility");
+        var svProp = helpers.CreateEnumWithIDProp(svCaption);
         if (svProp!=null)
         {
             svProp.PropID = "_setting_visibility";
@@ -2155,7 +2326,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             for (int i=0; i<CEParamsReceiver.CEParameters.SettingVisibilities.Count; i++)
             {
                 var sv = CEParamsReceiver.CEParameters.SettingVisibilities[i];
-                svProp.Add(sv, sv, ""); 
+                var svName = GetEnumsTranslation("_setting_visibility", "Setting visibility", sv, sv);
+                svProp.Add(sv, svName, ""); 
             }
             svProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedSettingVisibilities);
             svProp.ValueSetter = new StringValueSetter(delegate (string v)
@@ -2173,7 +2345,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
 
         var parentInd = -1;
         // machines brands
-        var manufProp = helpers.CreateEnumWithIDProp("Manufacturer");
+        var manufCaption = GetLabelTranslation("Manufacturer");
+        var manufProp = helpers.CreateEnumWithIDProp(manufCaption);
         if (manufProp!=null)
         {
             manufProp.PropID = "_manufacturer";
@@ -2194,7 +2367,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
 
         // machines/printers
-        var machProp = helpers.CreateEnumWithIDProp("Printers");
+        var printCaption = GetLabelTranslation("Printers");
+        var machProp = helpers.CreateEnumWithIDProp(printCaption);
         if (machProp!=null)
         {
             machProp.PropID = "_printers";
@@ -2216,7 +2390,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
 
         // extruders
-        var extrProp = helpers.CreateEnumWithIDProp("Extruders");
+        var extrCaption = GetLabelTranslation("Extruders");
+        var extrProp = helpers.CreateEnumWithIDProp(extrCaption);
         if (extrProp!=null)
         {
             extrProp.PropID = "_extruders";
@@ -2231,7 +2406,20 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             for (int i=0; i<CEParamsReceiver.CEParameters.SelectedMachine.Extruders.Count; i++)
             {
                 var extr = CEParamsReceiver.CEParameters.SelectedMachine.Extruders[i];
-                extrProp.Add(extr.id, extr.name, ""); 
+                var caption = "";
+                if (extr.name.Contains("Extruder"))
+                {
+                    caption = extr.name.Substring(0, 8);
+                    caption = GetEnumsTranslation("_extruders", "Extruders", caption, caption);
+                    var number = "";
+                    if (8<extr.name.Length)
+                        number = extr.name.Substring(8);
+                    caption = caption+number;
+                }
+                else
+                    caption = extr.name;   
+                     
+                extrProp.Add(extr.id, caption, ""); 
             }
             extrProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedExtruder.id);
             extrProp.ValueSetter = new StringValueSetter(delegate (string v)
@@ -2243,7 +2431,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
 
         // materials brands
-        var materialBrandProp = helpers.CreateEnumWithIDProp("Material brand");
+        var mbCaption = GetLabelTranslation("Material brand");
+        var materialBrandProp = helpers.CreateEnumWithIDProp(mbCaption);
         if (materialBrandProp!=null)
         {
             materialBrandProp.PropID = "_material_brand";
@@ -2260,7 +2449,15 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                     {
                         
                         if (mat.name.ToLower().Contains("generic") || mat.name.ToLower().Contains("ultimaker"))
-                            materialBrandProp.Add(mat.name, mat.name, ""); 
+                        {
+                            if (mat.name.ToLower().Contains("generic"))
+                            {
+                                var Caption = GetEnumsTranslation("_material_brand", "Material brand", mat.name, mat.name);
+                                materialBrandProp.Add(mat.name, Caption, ""); 
+                            }
+                            else
+                                materialBrandProp.Add(mat.name, mat.name, ""); 
+                        }       
                     }
                     else
                     {
@@ -2283,7 +2480,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
 
         // materials
-        var matProp = helpers.CreateEnumWithIDProp("Materials");
+        var matCaption = GetLabelTranslation("Materials");
+        var matProp = helpers.CreateEnumWithIDProp(matCaption);
         if (matProp!=null)
         {
             matProp.PropID = "_materials";
@@ -2320,7 +2518,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }   
 
         // variants
-        var varProp = helpers.CreateEnumWithIDProp("Variants");
+        var varCaption = GetLabelTranslation("Variants");
+        var varProp = helpers.CreateEnumWithIDProp(varCaption);
         if (varProp!=null)
         {
             varProp.PropID = "_variants";
@@ -2353,7 +2552,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
 
         // profiles
-        var profProp = helpers.CreateEnumWithIDProp("Profiles");
+        var profCaption = GetLabelTranslation("Profiles");
+        var profProp = helpers.CreateEnumWithIDProp(profCaption);
         if (profProp!=null)
         {
             profProp.PropID = "_profiles";
@@ -2368,7 +2568,9 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             for (int i=0; i<CEParamsReceiver.CEParameters.IntentCategories.Count; i++)
             {
                 var pr = CEParamsReceiver.CEParameters.IntentCategories[i];
-                profProp.Add(pr.IntentCategoryName, pr.IntentName, ""); 
+                var name = pr.IntentName;
+                var Caption = GetEnumsTranslation("_profiles", "Profiles", name, name);
+                profProp.Add(pr.IntentCategoryName, Caption, ""); 
             }
             profProp.ValueGetter = new StringValueGetter(delegate ()
             {
@@ -2386,7 +2588,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
         
         // resolution
-        var resProp = helpers.CreateEnumWithIDProp("Resolutions");
+        var resCaption = GetLabelTranslation("Resolutions");
+        var resProp = helpers.CreateEnumWithIDProp(resCaption);
         if (resProp!=null)
         {
             resProp.PropID = "_resolutions";

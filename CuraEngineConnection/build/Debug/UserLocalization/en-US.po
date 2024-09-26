@@ -1,0 +1,107 @@
+msgctxt "General parameters label"
+msgstr "General parameters"
+
+msgctxt "Manufacturer label"
+msgstr "Manufacturer"
+
+msgctxt "Printers label"
+msgstr "Printers"
+
+msgctxt "Extruders label"
+msgstr "Extruders"
+
+msgctxt "Extruders option Extruder"
+msgstr "Extruder"
+
+msgctxt "Material brand label"
+msgstr "Material brand"
+
+msgctxt "Material brand option Generic"
+msgstr "Generic"
+
+msgctxt "Materials label"
+msgstr "Materials"
+
+msgctxt "Variants label"
+msgstr "Variants"
+
+msgctxt "Profiles label"
+msgstr "Profiles"
+
+msgctxt "Profiles option Balanced"
+msgstr "Balanced"
+
+msgctxt "Profiles option Visual"
+msgstr "Visual"
+
+msgctxt "Profiles option Engineering"
+msgstr "Engineering"
+
+msgctxt "Profiles option Draft"
+msgstr "Draft"
+
+msgctxt "Profiles option Annealing"
+msgstr "Annealing"
+
+msgctxt "Resolutions label"
+msgstr "Resolutions"
+
+msgctxt "Show custom parameters label"
+msgstr "Show custom parameters"
+
+msgctxt "Setting visibility label"
+msgstr "Setting visibility"
+
+msgctxt "Setting visibility option basic"
+msgstr "basic"
+
+msgctxt "Setting visibility option expert"
+msgstr "expert"
+
+msgctxt "Setting visibility option advanced"
+msgstr "advanced"
+
+msgctxt "Setting visibility option all"
+msgstr "all"
+
+msgctxt "Auto tool parameterization label"
+msgstr "Auto tool parameterization"
+
+msgctxt "Toolpath parsing mode label"
+msgstr "Toolpath parsing mode"
+
+msgctxt "Toolpath parsing mode option Simplified"
+msgstr "Simplified"
+
+msgctxt "Toolpath parsing mode option GCode Based"
+msgstr "GCode Based"
+
+msgctxt "Output additional parameters label"
+msgstr "Output additional parameters"
+
+msgctxt "Filament extruding length per frame label"
+msgstr "Filament extruding length per frame"
+
+msgctxt "Output filament extruding label"
+msgstr "Output filament extruding"
+
+msgctxt "Set Cura path label"
+msgstr "Set Cura path"
+
+msgctxt "Path to CuraEngine.exe label"
+msgstr "Path to CuraEngine.exe"
+
+msgctxt "Click_to_open_general_parameters label"
+msgstr "Click "..." to change"
+
+msgctxt "Path_warning_message label"
+msgstr "Cura not found installed. Set path to CuraEngine.exe manually. Parameters tab -> Set Cura path"
+
+msgctxt "Strength label"
+msgstr "Strength"
+
+msgctxt "Support label"
+msgstr "Support"
+
+msgctxt "Adhesion label"
+msgstr "Adhesion"
