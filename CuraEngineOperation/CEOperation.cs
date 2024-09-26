@@ -27,6 +27,7 @@ public enum ToolpathParsingMode
     tpmSimplified,
     tpmGCodeBased
 }
+public delegate string GCodeCommandTranslation(string label = "");
 public class CuraEngineControlProcess : ICuraEngineControlProcess
 {
     public double FilamentExtrudingLength = 100; 
@@ -50,6 +51,7 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
     public IST_UpdateHandler? updateHandler;
     bool isFeedSectionOpened = false;
     int LastLineSection = 0;
+    public GCodeCommandTranslation OnGCodeCommandTranslation;
     public void OnProgress(double progress)
     {
         try
@@ -106,7 +108,11 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
             if (tpm==ToolpathParsingMode.tpmGCodeBased)
             {
                 if (GCLayout != null)
+                {
+                    GCLayout.OnGCodeCommandTranslation = OnGCodeCommandTranslation;
                     GCLayout.AddToCLData(clf, boundingBox, IsOutputFilamentExtruding, FilamentExtrudingLength);
+                }
+                    
             }
         }
         catch(Exception e)
@@ -184,7 +190,8 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
             {
                 LayerInc++;
                 currentLayerHeight = height;
-                var group = "Layer: " + LayerInc.ToString(); 
+                var LayerCaption = OnGCodeCommandTranslation("Layer"); 
+                var group = LayerCaption + ": " + LayerInc.ToString(); 
                 clf.BeginItem(TST_CLDItemType.itGroup, group, group);
             }
         }
@@ -263,17 +270,22 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
                         {
                             LastLineSection = lineType;
                             var feedName = FeedConverter.GetFeedName((int)lineType); 
-                            clf.BeginItem(TST_CLDItemType.itGroup, feedName, feedName);
+                            var captionFeed = OnGCodeCommandTranslation(feedName);
+                            clf.BeginItem(TST_CLDItemType.itGroup, feedName, captionFeed);
                             isFeedSectionOpened = true;
                         }
                               
                         lineFeedrate = lineFeedrate*60;  
                         if (IsOutputAdditionalCLDataParameters) 
                         {
-                            clf.AddPrint("#CuraEngine: LineType="+lineType.ToString());
-                            clf.AddPrint("#CuraEngine: LineWidth="+lineWidth.ToString());
-                            clf.AddPrint("#CuraEngine: LineThickness="+lineThickness.ToString());             
-                            clf.AddPrint("#CuraEngine: LineFeedrate="+lineFeedrate.ToString());
+                            var LineTypeCaption = OnGCodeCommandTranslation("LineType");
+                            clf.AddPrint("#CuraEngine: " + LineTypeCaption + "=" + lineType.ToString());
+                            var LineWidthCaption = OnGCodeCommandTranslation("LineWidth");
+                            clf.AddPrint("#CuraEngine: " + LineWidthCaption +"="+lineWidth.ToString());
+                            var LineThicknessCaption = OnGCodeCommandTranslation("LineThickness");
+                            clf.AddPrint("#CuraEngine: " + LineThicknessCaption +"="+lineThickness.ToString());
+                            var LineFeedrateCaption = OnGCodeCommandTranslation("LineFeedrate");             
+                            clf.AddPrint("#CuraEngine: " + LineFeedrateCaption + "="+lineFeedrate.ToString());
                         }
                         
                         prevLineType = lineType;
@@ -302,8 +314,9 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
                                     clf.EndItem();
                                     isFeedSectionOpened = false;
                                 }
-                                var feedName = FeedConverter.GetFeedName((int)lineType); 
-                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, feedName);
+                                var feedName = FeedConverter.GetFeedName((int)lineType);
+                                var captionFeed = OnGCodeCommandTranslation(feedName); 
+                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, captionFeed);
                                 isFeedSectionOpened = true;
                             }
                         }
@@ -311,7 +324,8 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
                         {
                             if (IsOutputAdditionalCLDataParameters) 
                             {
-                                clf.AddPrint("#CuraEngine: LineType="+lineType.ToString());
+                                var LineTypeCaption = OnGCodeCommandTranslation("LineType"); 
+                                clf.AddPrint("#CuraEngine: " + LineTypeCaption + "="+lineType.ToString());
                             }
                             prevLineType = lineType;
                         }
@@ -319,7 +333,8 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
                         {
                             if (IsOutputAdditionalCLDataParameters) 
                             {
-                                clf.AddPrint("#CuraEngine: LineWidth="+lineWidth.ToString());
+                                var LineWidthCaption = OnGCodeCommandTranslation("LineWidth"); 
+                                clf.AddPrint("#CuraEngine: " + LineWidthCaption + "="+lineWidth.ToString());
                             }
                             prevLineWidth = lineWidth;
                         }
@@ -327,7 +342,8 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
                         {
                             if (IsOutputAdditionalCLDataParameters) 
                             {
-                                clf.AddPrint("#CuraEngine: LineThickness="+lineThickness.ToString());
+                                var LineThicknessCaption = OnGCodeCommandTranslation("LineThickness"); 
+                                clf.AddPrint("#CuraEngine: " + LineThicknessCaption + "="+lineThickness.ToString());
                             }
                             prevLineThickness = lineThickness;
                         }            
@@ -335,7 +351,8 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess
                         {
                             if (IsOutputAdditionalCLDataParameters) 
                             {
-                                clf.AddPrint("#CuraEngine: LineFeedrate="+lineFeedrate.ToString());
+                                var LineFeedrateCaption = OnGCodeCommandTranslation("LineFeedrate"); 
+                                clf.AddPrint("#CuraEngine: " + LineFeedrateCaption + "="+lineFeedrate.ToString());
                             }
                             prevLineFeedrate = lineFeedrate;
                         }          
@@ -612,6 +629,19 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 caption = label;
             else
                 caption = id;
+        }
+        return caption;
+    }
+    private string GetGCodeCommandTranslation(string label = "")
+    {
+        var label_ = "";
+        if (label!="")
+            label_ = label + " CLData_Command";
+        var caption = GetTranslation(label_);
+        if (caption==null || caption=="")
+        {
+            if (label!="")
+                caption = label;
         }
         return caption;
     }
@@ -1400,6 +1430,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         FillPoints(tr);
         CEParamsReceiver.CEParameters.ParseAllParameters();
         CEControlProcess.clf = clf;
+        CEControlProcess.OnGCodeCommandTranslation = GetGCodeCommandTranslation;
         CEControlProcess.IsOutputAdditionalCLDataParameters = IsOutputAdditionalCLDataParameters;
         CEControlProcess.IsOutputFilamentExtruding = IsOutputFilamentExtruding;
         CEControlProcess.tpm = tpm;

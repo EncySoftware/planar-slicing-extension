@@ -130,6 +130,7 @@ public class GCodeCommand: IGCodeLine
     string Comment = "";
     public double FilamentExtrudingLength = 100;
     public bool IsOutputFilamentExtruding = false;
+    public GCodeCommandTranslation OnGCodeCommandTranslation;
     public GCodeCommand(string LineText)
     {
         Parameters = new Dictionary<string, string>();
@@ -171,10 +172,11 @@ public class GCodeCommand: IGCodeLine
                         clf.OutPower(0, value); 
                     else
                     {
+                        var EPerFrameCaption = OnGCodeCommandTranslation("EPerFrame"); 
                         if (isG0)
-                            clf.AddPrint("EPerFrame: " + value + "%; F="+LastMovingFeedValue+"mm/min");
+                            clf.AddPrint(EPerFrameCaption + ": " + value + "%; F="+LastMovingFeedValue+"mm/min");
                         else
-                            clf.AddPrint("EPerFrame: " + value + "%; F="+LastFeedValue+"mm/min");
+                            clf.AddPrint(EPerFrameCaption + ": " + value + "%; F="+LastFeedValue+"mm/min");
                     }
                 }      
             }
@@ -592,6 +594,7 @@ public class GCodeLayout
     double LastFeedValue = 0;
     double LastMovingFeedValue = 0;
     List<GCodeBlock> GCodeBlocks; 
+    public GCodeCommandTranslation OnGCodeCommandTranslation;
     public GCodeLayout()
     {
         GCodeBlocks = new List<GCodeBlock>();
@@ -638,7 +641,10 @@ public class GCodeLayout
         if (clf!=null)
         {
             if (IsOutputFilamentExtruding)
-                clf.AddPrint("EPerFrame: " + FilamentExtrudingLength +"mm");
+            {
+                var EPerFrameCaption = OnGCodeCommandTranslation("EPerFrame"); 
+                clf.AddPrint(EPerFrameCaption + ": " + FilamentExtrudingLength +"mm");
+            }            
             for (var i=0; i<GCodeBlocks.Count; i++)
             {
                 var isStartGCode = false;
@@ -648,7 +654,8 @@ public class GCodeLayout
                 if (Block.IsLayerBlock())
                 {
                     var ind = Block.LayerInd+1;
-                    var layer = "Layer: " + ind; 
+                    var LayerCaption = OnGCodeCommandTranslation("Layer"); 
+                    var layer = LayerCaption + ": " + ind; 
                     clf.BeginItem(TST_CLDItemType.itGroup, layer, layer);
                 }
                        
@@ -660,6 +667,7 @@ public class GCodeLayout
                         case GCodeLineType.ltCommand:
                             var CommandLine = (GCodeCommand)Line;
                             CommandLine.BoundingBox = BoundingBox;
+                            CommandLine.OnGCodeCommandTranslation = OnGCodeCommandTranslation;
                             CommandLine.FilamentExtrudingLength = FilamentExtrudingLength;
                             CommandLine.IsOutputFilamentExtruding = IsOutputFilamentExtruding;
                             if (CommandLine.CommandName=="G0")
@@ -687,7 +695,8 @@ public class GCodeLayout
                             {
                                 LastFeedType = FeedLine.FeedType;
                                 var feedName = FeedConverter.GetFeedName((int)LastFeedType); 
-                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, feedName);
+                                var captionFeed = OnGCodeCommandTranslation(feedName);
+                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, captionFeed);
                                 isFeedSectionOpened = true;
                             }    
                             if (LastFeedType != FeedLine.FeedType)
@@ -699,7 +708,8 @@ public class GCodeLayout
                                     isFeedSectionOpened = false;
                                 }       
                                 var feedName = FeedConverter.GetFeedName((int)LastFeedType); 
-                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, feedName);
+                                var captionFeed = OnGCodeCommandTranslation(feedName);
+                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, captionFeed);
                                 isFeedSectionOpened = true;
                             }  
                             //FeedLine.AddToCLData(clf);          

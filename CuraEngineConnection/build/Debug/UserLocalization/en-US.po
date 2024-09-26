@@ -105,3 +105,45 @@ msgstr "Support"
 
 msgctxt "Adhesion label"
 msgstr "Adhesion"
+
+msgctxt "Layer CLData_Command"
+msgstr "Layer"
+
+msgctxt "LineType CLData_Command"
+msgstr "LineType"
+
+msgctxt "LineWidth CLData_Command"
+msgstr "LineWidth"
+
+msgctxt "LineThickness CLData_Command"
+msgstr "LineThickness"
+
+msgctxt "LineFeedrate CLData_Command"
+msgstr "LineFeedrate"
+
+msgctxt "WALL-OUTER CLData_Command"
+msgstr "WALL-OUTER"
+
+msgctxt "WALL-INNER CLData_Command"
+msgstr "WALL-INNER"
+
+msgctxt "SKIN CLData_Command"
+msgstr "SKIN"
+
+msgctxt "SUPPORT CLData_Command"
+msgstr "SUPPORT"
+
+msgctxt "SKIRT CLData_Command"
+msgstr "SKIRT"
+
+msgctxt "FILL CLData_Command"
+msgstr "FILL"
+
+msgctxt "SUPPORT-INTERFACE CLData_Command"
+msgstr "SUPPORT-INTERFACE"
+
+msgctxt "PRIME-TOWER CLData_Command"
+msgstr "PRIME-TOWER"
+
+msgctxt "EPerFrame CLData_Command"
+msgstr "EPerFrame"
