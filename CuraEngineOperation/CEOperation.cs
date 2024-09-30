@@ -1490,7 +1490,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private string Name{ get; set; }
     private int Count{ get; set; }
     private bool Visible{ get; set; }
-    private IST_CustomProp GetStringProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
+    private IST_CustomProp GetStringProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false, bool IsStructural = false)
     {
         var label = GetLabelTranslation(param.id, param.label);
         var sp = helpers.CreateStringProp(label);
@@ -1510,7 +1510,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 CEParamsReceiver.CEParameters.UpdateAllParameters();
             }
         });
-        sp.IsStructural = new BooleanValueGetter(() => false);
+        sp.IsStructural = new BooleanValueGetter(() => IsStructural);
         sp.Visible = new BooleanValueGetter(delegate ()
         {         
             bool isVisible = true;
@@ -1548,7 +1548,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         });
         return sp;
     }
-    private IST_CustomProp GetIntegerProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
+    private IST_CustomProp GetIntegerProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false, bool IsStructural = false)
     {
         var label = GetLabelTranslation(param.id, param.label);
         var ip = helpers.CreateIntegerProp(label);
@@ -1558,7 +1558,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         ip.UnitsStr = param.unit;
         ip.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         ip.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
-        ip.IsStructural = new BooleanValueGetter(() => false);
+        ip.IsStructural = new BooleanValueGetter(() => IsStructural);
         ip.RestoreValueProc = new DefaultPropValue(delegate()
         {
             String userParam;
@@ -1605,7 +1605,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         });
         return ip;
     }
-    private IST_CustomProp GetFloatProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
+    private IST_CustomProp GetFloatProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false, bool IsStructural = false)
     {
         var label = GetLabelTranslation(param.id, param.label);
         var fp = helpers.CreateDoubleProp(label);
@@ -1615,7 +1615,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         fp.UnitsStr = param.unit;
         fp.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         fp.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
-        fp.IsStructural = new BooleanValueGetter(() => false);
+        fp.IsStructural = new BooleanValueGetter(() => IsStructural);
         fp.RestoreValueProc = new DefaultPropValue(delegate()
         {
             String userParam;
@@ -1668,7 +1668,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         });
         return fp;
     }
-    private IST_CustomProp GetBoolProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
+    private IST_CustomProp GetBoolProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false, bool IsStructural = false)
     {
         var label = GetLabelTranslation(param.id, param.label);
         var bp = helpers.CreateBooleanProp(label);
@@ -1677,7 +1677,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         bp.PropID = param.id;
         bp.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         bp.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
-        bp.IsStructural = new BooleanValueGetter(() => false);
+        bp.IsStructural = new BooleanValueGetter(() => IsStructural);
         bp.RestoreValueProc = new DefaultPropValue(delegate()
         {
             String userParam;
@@ -1725,14 +1725,14 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         });
         return bp;
     }
-    private IST_CustomProp GetEnumProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false)
+    private IST_CustomProp GetEnumProp(Parameter param, bool isGlobalParameter, bool isAlwaysVisible = false, bool IsStructural = false)
     {
         var label = GetLabelTranslation(param.id, param.label);
         var ep = helpers.CreateEnumWithIDProp(label);
         if (param.icon != null && param.icon != "")
             ep.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         ep.PropID = param.id;
-        ep.IsStructural = new BooleanValueGetter(() => false);
+        ep.IsStructural = new BooleanValueGetter(() => IsStructural);
         ep.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         ep.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
         ep.RestoreValueProc = new DefaultPropValue(delegate()
@@ -2012,6 +2012,24 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     {
         Parameter param;
         var parentInd = -1;
+
+        //Strength
+        IST_CustomDoublePropHelper infillProp = null;
+        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("infill_sparse_density", out param))
+            infillProp = (IST_CustomDoublePropHelper)GetFloatProp(param, true, false, true);
+
+        IST_CustomEnumWithIDPropHelper infillPatternProp = null;
+        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("infill_pattern", out param))
+            infillPatternProp = (IST_CustomEnumWithIDPropHelper)GetEnumProp(param, true, false, true);
+
+        IST_CustomDoublePropHelper wallProp = null;
+        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("wall_thickness", out param))
+            wallProp = (IST_CustomDoublePropHelper)GetFloatProp(param, true, false, true);
+
+        IST_CustomDoublePropHelper topBottomProp = null; 
+        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("top_bottom_thickness", out param))
+            topBottomProp = (IST_CustomDoublePropHelper)GetFloatProp(param, true, false, true);
+
         var strengthCaption = GetLabelTranslation("Strength");
         var strengthProp = helpers.CreateComplexProp(strengthCaption);
         if (strengthProp != null)
@@ -2019,32 +2037,41 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             strengthProp.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
             strengthProp.PropIsExpandedGetter = new BooleanValueGetter(() => IsStrengthPropsExpanded);
             strengthProp.PropIsExpandedSetter = new BooleanValueSetter((v) => IsStrengthPropsExpanded = v);
+            strengthProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = false;
+                if (infillProp!=null && infillProp.Visible.GetValue() || infillPatternProp!=null && infillPatternProp.Visible.GetValue()  ||
+                    wallProp!=null && wallProp.Visible.GetValue() || topBottomProp!=null && topBottomProp.Visible.GetValue())
+                    isVisible = true;
+                return isVisible;
+            });
             parentInd = SimpleIterator.AddNewProp(strengthProp, -1);
         }
-        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("infill_sparse_density", out param))
-        {
-            IST_CustomProp infillProp = GetFloatProp(param, true, false);
-            if (infillProp != null)
-                SimpleIterator.AddNewProp(infillProp, parentInd);
-        }
-        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("infill_pattern", out param))
-        {
-            IST_CustomProp infillPatternProp = GetEnumProp(param, true, false);
-            if (infillPatternProp != null)
-                SimpleIterator.AddNewProp(infillPatternProp, parentInd);
-        }
-        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("wall_thickness", out param))
-        {
-            IST_CustomProp wallProp = GetFloatProp(param, true, false);
-            if (wallProp != null)
-                SimpleIterator.AddNewProp(wallProp, parentInd);
-        }
-        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("top_bottom_thickness", out param))
-        {
-            IST_CustomProp topBottomProp = GetFloatProp(param, true, false);
-            if (topBottomProp != null)
-                SimpleIterator.AddNewProp(topBottomProp, parentInd);
-        }
+        if (infillProp != null)
+            SimpleIterator.AddNewProp(infillProp, parentInd);
+        if (infillPatternProp != null)
+            SimpleIterator.AddNewProp(infillPatternProp, parentInd);
+        if (wallProp != null)
+            SimpleIterator.AddNewProp(wallProp, parentInd);
+        if (topBottomProp != null)
+            SimpleIterator.AddNewProp(topBottomProp, parentInd);
+
+        //support
+        IST_CustomBooleanPropHelper supportEnabledProp = null;
+        Parameter seParam = null;
+        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_enable", out seParam))
+            supportEnabledProp = (IST_CustomBooleanPropHelper)GetBoolProp(seParam, true, false, true);
+
+        Parameter ssParam = null;
+        IST_CustomEnumWithIDPropHelper supportStructureProp = null;
+        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_structure", out ssParam))
+            supportStructureProp = (IST_CustomEnumWithIDPropHelper)GetEnumProp(ssParam, true, false, true);
+
+        Parameter stParam = null;
+        IST_CustomEnumWithIDPropHelper supportTypeProp = null;
+        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_type", out stParam))
+            supportTypeProp = (IST_CustomEnumWithIDPropHelper)GetEnumProp(stParam, true, false, true);
+
         var SupportCaption = GetLabelTranslation("Support");
         var supportProp = helpers.CreateComplexProp(SupportCaption);
         if (supportProp != null)
@@ -2052,26 +2079,25 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             supportProp.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
             supportProp.PropIsExpandedGetter = new BooleanValueGetter(() => IsSupportPropsExpanded);
             supportProp.PropIsExpandedSetter = new BooleanValueSetter((v) => IsSupportPropsExpanded = v);
+            supportProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = false;
+                
+                if (SearchFilter=="" || (supportEnabledProp!=null && supportEnabledProp.Caption.ToLower().Contains(SearchFilter.ToLower())) ||
+                    (supportStructureProp!=null && supportStructureProp.Caption.ToLower().Contains(SearchFilter.ToLower())) ||
+                    (supportTypeProp!=null && supportTypeProp.Caption.ToLower().Contains(SearchFilter.ToLower())))
+                    isVisible = true;
+                return isVisible;
+            });
             parentInd = SimpleIterator.AddNewProp(supportProp, -1);
         }
-        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_enable", out param))
-        {
-            IST_CustomProp supportEnabledProp = GetBoolProp(param, true, false);
-            if (supportEnabledProp != null)
-                SimpleIterator.AddNewProp(supportEnabledProp, parentInd);
-        }
-        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_structure", out param))
-        {
-            IST_CustomProp supportStructureProp = GetEnumProp(param, true, false);
-            if (supportStructureProp != null)
-                SimpleIterator.AddNewProp(supportStructureProp, parentInd);
-        }
-        if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("support_type", out param))
-        {
-            IST_CustomProp supportTypeProp = GetEnumProp(param, true, false);
-            if (supportTypeProp != null)
-                SimpleIterator.AddNewProp(supportTypeProp, parentInd);
-        }
+        if (supportEnabledProp != null)
+            SimpleIterator.AddNewProp(supportEnabledProp, parentInd);
+        if (supportStructureProp != null)
+            SimpleIterator.AddNewProp(supportStructureProp, parentInd);
+        if (supportTypeProp != null)
+            SimpleIterator.AddNewProp(supportTypeProp, parentInd);
+        //adhesion
         if (CEParamsReceiver.CEParameters.GlobalParams.TryGetValue("adhesion_type", out param))
         {
             var PropName = GetLabelTranslation("Adhesion");
@@ -2090,7 +2116,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 {
                     Console.WriteLine($"Get visible failed: {e.Message}");
                 }
-                if (isVisible && SearchFilter!="" && !PropName.ToLower().Contains(SearchFilter))
+                if (isVisible && SearchFilter!="" && !PropName.ToLower().Contains(SearchFilter.ToLower()))
                     isVisible = false;
                 return isVisible;
             });
@@ -2133,7 +2159,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             atpProp.Visible = new BooleanValueGetter(delegate ()
             {
                 bool isVisible = true;
-                if (SearchFilter!="" && !atpProp.Caption.ToLower().Contains(SearchFilter))
+                if (SearchFilter!="" && !atpProp.Caption.ToLower().Contains(SearchFilter.ToLower()))
                     isVisible = false;
                 return isVisible;
             });
@@ -2156,6 +2182,76 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     private IST_SimplePropIterator AddToolpathParsingMode(IST_SimplePropIterator SimpleIterator)
     {
         int parentInd = -1;
+
+        var atpCaption = GetLabelTranslation("Output additional parameters");
+        var atpProp = helpers.CreateBooleanProp(atpCaption);
+        if (atpProp!=null)
+        {
+            atpProp.PropID = "_output_additional_parameters";
+            atpProp.IsStructural = new BooleanValueGetter(() => true);
+            atpProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = false;
+                if (tpm==ToolpathParsingMode.tpmSimplified)
+                    isVisible = true;
+                if (SearchFilter!="" && !atpProp.Caption.ToLower().Contains(SearchFilter.ToLower()))
+                    isVisible = false;
+                return isVisible;
+            });
+            atpProp.ValueGetter = new BooleanValueGetter(() => IsOutputAdditionalCLDataParameters);
+            atpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
+            {
+                IsOutputAdditionalCLDataParameters = v;
+                SaveOutputAdditionalParametersToXML();
+            });
+        }
+        var ofeCaption = GetLabelTranslation("Output filament extruding");
+        var ofeProp = helpers.CreateBooleanProp(ofeCaption);
+        if (ofeProp!=null)
+        {
+            ofeProp.PropID = "_output_filament_extruding";
+            ofeProp.IsStructural = new BooleanValueGetter(() => true);
+            ofeProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = false;
+                if (tpm==ToolpathParsingMode.tpmGCodeBased)
+                    isVisible = true;
+                if (SearchFilter!="" && !ofeProp.Caption.ToLower().Contains(SearchFilter.ToLower()))
+                    isVisible = false;
+                return isVisible;
+            });
+            ofeProp.ValueGetter = new BooleanValueGetter(() => IsOutputFilamentExtruding);
+            ofeProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
+            {
+                IsOutputFilamentExtruding = v;
+                SaveOutputFilamentExtrudingToXML();
+            });
+        }
+
+        var felCaption = GetLabelTranslation("Filament extruding length per frame");
+        var felProp = helpers.CreateDoubleProp(felCaption);
+        if (felProp!=null)
+        {
+            felProp.PropID = "_filament_extruding_length";
+            felProp.IsStructural = new BooleanValueGetter(() => true);
+            felProp.UnitsStr = "mm";
+            felProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = false;
+                if (tpm==ToolpathParsingMode.tpmGCodeBased && IsOutputFilamentExtruding)
+                    isVisible = true;
+                if (SearchFilter!="" && !felProp.Caption.ToLower().Contains(SearchFilter.ToLower()))
+                    isVisible = false;
+                return isVisible;
+            });
+            felProp.ValueGetter = new DoubleValueGetter(() => FilamentExtrudingLength);
+            felProp.ValueSetter = new DoubleValueSetter(delegate (double v)
+            {
+                FilamentExtrudingLength = v;
+                SaveFilamentExtrudingLengthToXML();
+            });
+        }
+
         var cldataModeCaption = GetLabelTranslation("Toolpath parsing mode");
         var cldataModeProp = helpers.CreateEnumWithIDProp(cldataModeCaption);
         if (cldataModeProp!=null)
@@ -2165,7 +2261,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             cldataModeProp.Visible = new BooleanValueGetter(delegate ()
             {
                 bool isVisible = true;
-                if (SearchFilter!="" && !cldataModeProp.Caption.ToLower().Contains(SearchFilter))
+                if (SearchFilter!="" && !cldataModeProp.Caption.ToLower().Contains(SearchFilter.ToLower()) &&
+                     !atpProp.Visible.GetValue() && !ofeProp.Visible.GetValue() && !felProp.Visible.GetValue())
                     isVisible = false;
                 return isVisible;
             });
@@ -2173,7 +2270,6 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             cldataModeProp.Add("Simplified", smplCaption, ""); 
             var gcodeCaption = GetEnumsTranslation("_toolpath_parsing_mode", "Toolpath parsing mode", "GCodeBased", "GCode based");
             cldataModeProp.Add("GCodeBased", gcodeCaption, ""); 
-            cldataModeProp.ValueGetter = new StringValueGetter(() => CEParamsReceiver.CEParameters.SelectedSettingVisibilities);
             cldataModeProp.ValueGetter = new StringValueGetter(delegate ()
             {
                 if (tpm==ToolpathParsingMode.tpmSimplified)
@@ -2192,75 +2288,12 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             parentInd = SimpleIterator.AddNewProp(cldataModeProp, -1);
         }
 
-        var atpCaption = GetLabelTranslation("Output additional parameters");
-        var atpProp = helpers.CreateBooleanProp(atpCaption);
-        if (atpProp!=null)
-        {
-            atpProp.PropID = "_output_additional_parameters";
-            atpProp.Visible = new BooleanValueGetter(delegate ()
-            {
-                bool isVisible = false;
-                if (tpm==ToolpathParsingMode.tpmSimplified)
-                    isVisible = true;
-                if (SearchFilter!="" && !atpProp.Caption.ToLower().Contains(SearchFilter))
-                    isVisible = false;
-                return isVisible;
-            });
-            atpProp.ValueGetter = new BooleanValueGetter(() => IsOutputAdditionalCLDataParameters);
-            atpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
-            {
-                IsOutputAdditionalCLDataParameters = v;
-                SaveOutputAdditionalParametersToXML();
-            });
+        if (atpProp!=null) 
             SimpleIterator.AddNewProp(atpProp, parentInd);
-        }
-
-        var ofeCaption = GetLabelTranslation("Output filament extruding");
-        var ofeProp = helpers.CreateBooleanProp(ofeCaption);
-        if (ofeProp!=null)
-        {
-            ofeProp.PropID = "_output_filament_extruding";
-            ofeProp.Visible = new BooleanValueGetter(delegate ()
-            {
-                bool isVisible = false;
-                if (tpm==ToolpathParsingMode.tpmGCodeBased)
-                    isVisible = true;
-                if (SearchFilter!="" && !ofeProp.Caption.ToLower().Contains(SearchFilter))
-                    isVisible = false;
-                return isVisible;
-            });
-            ofeProp.ValueGetter = new BooleanValueGetter(() => IsOutputFilamentExtruding);
-            ofeProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
-            {
-                IsOutputFilamentExtruding = v;
-                SaveOutputFilamentExtrudingToXML();
-            });
+        if (ofeProp!=null)    
             SimpleIterator.AddNewProp(ofeProp, parentInd);
-        }
-
-        var felCaption = GetLabelTranslation("Filament extruding length per frame");
-        var felProp = helpers.CreateDoubleProp(felCaption);
         if (felProp!=null)
-        {
-            felProp.PropID = "_filament_extruding_length";
-            felProp.UnitsStr = "mm";
-            felProp.Visible = new BooleanValueGetter(delegate ()
-            {
-                bool isVisible = false;
-                if (tpm==ToolpathParsingMode.tpmGCodeBased && IsOutputFilamentExtruding)
-                    isVisible = true;
-                if (SearchFilter!="" && !felProp.Caption.ToLower().Contains(SearchFilter))
-                    isVisible = false;
-                return isVisible;
-            });
-            felProp.ValueGetter = new DoubleValueGetter(() => FilamentExtrudingLength);
-            felProp.ValueSetter = new DoubleValueSetter(delegate (double v)
-            {
-                FilamentExtrudingLength = v;
-                SaveFilamentExtrudingLengthToXML();
-            });
             SimpleIterator.AddNewProp(felProp, parentInd);
-        }
         return SimpleIterator;
     }
     private IST_SimplePropIterator AddGeneralParameters(IST_SimplePropIterator SimpleIterator)
@@ -2273,7 +2306,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             genProp.Visible = new BooleanValueGetter(delegate ()
             {
                 bool isVisible = true;
-                if (SearchFilter!="" && !genProp.Caption.ToLower().Contains(SearchFilter))
+                if (SearchFilter!="" && !genProp.Caption.ToLower().Contains(SearchFilter.ToLower()))
                     isVisible = false;
                 return isVisible;
             });
@@ -2317,29 +2350,6 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
     {
 
         var parentInd = -1;
-        // show custom parameters
-        var scpCaption = GetLabelTranslation("Show custom parameters");
-        var scpProp = helpers.CreateBooleanProp(scpCaption);
-        if (scpProp!=null)
-        {
-            scpProp.PropID = "_show_custom_parameters";
-            scpProp.IsStructural = new BooleanValueGetter(() => true);
-            scpProp.Visible = new BooleanValueGetter(delegate ()
-            {
-                bool isVisible = true;
-                if (SearchFilter!="" && !scpProp.Caption.ToLower().Contains(SearchFilter))
-                    isVisible = false;
-                return isVisible;
-            });
-            scpProp.ValueGetter = new BooleanValueGetter(() => CEParamsReceiver.CEParameters.IsShowCustomParameters);
-            scpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
-            {
-                CEParamsReceiver.CEParameters.IsShowCustomParameters = v;
-                SaveShowCustomParametersToXML();
-            }); 
-            parentInd = SimpleIterator.AddNewProp(scpProp, parentInd);
-        }
-
         //setting visibility
         var svCaption = GetLabelTranslation("Setting visibility");
         var svProp = helpers.CreateEnumWithIDProp(svCaption);
@@ -2350,7 +2360,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             svProp.Visible = new BooleanValueGetter(delegate ()
             {
                 bool isVisible = CEParamsReceiver.CEParameters.IsShowCustomParameters;
-                if (SearchFilter!="" && !svProp.Caption.ToLower().Contains(SearchFilter))
+                if (SearchFilter!="" && !svProp.Caption.ToLower().Contains(SearchFilter.ToLower()))
                     isVisible = false;
                 return isVisible;
             });
@@ -2366,9 +2376,32 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 CEParamsReceiver.CEParameters.SelectedSettingVisibilities = v;
                 SaveSettingVisibilityToXML();
             });
-            SimpleIterator.AddNewProp(svProp, parentInd);
         }
-
+        // show custom parameters
+        var scpCaption = GetLabelTranslation("Show custom parameters");
+        var scpProp = helpers.CreateBooleanProp(scpCaption);
+        if (scpProp!=null)
+        {
+            scpProp.PropID = "_show_custom_parameters";
+            scpProp.IsStructural = new BooleanValueGetter(() => true);
+            scpProp.Visible = new BooleanValueGetter(delegate ()
+            {
+                bool isVisible = true;
+                if (SearchFilter!="" && !scpProp.Caption.ToLower().Contains(SearchFilter.ToLower()) &&
+                    !svProp.Visible.GetValue())
+                    isVisible = false;
+                return isVisible;
+            });
+            scpProp.ValueGetter = new BooleanValueGetter(() => CEParamsReceiver.CEParameters.IsShowCustomParameters);
+            scpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
+            {
+                CEParamsReceiver.CEParameters.IsShowCustomParameters = v;
+                SaveShowCustomParametersToXML();
+            }); 
+            parentInd = SimpleIterator.AddNewProp(scpProp, parentInd);
+        }
+        if (svProp!=null)
+            SimpleIterator.AddNewProp(svProp, parentInd);
         return SimpleIterator;
     }
     private IST_SimplePropIterator FillGeneralparameters(IST_SimplePropIterator SimpleIterator)
@@ -2671,7 +2704,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
                 {
                     if (SearchFilter!="")
                     {
-                        if (param.paramType!=ParameterType.ptCategory && param.label.ToLower().Contains(SearchFilter))
+                        var label = GetLabelTranslation(param.id, param.label);
+                        if (param.paramType!=ParameterType.ptCategory && label.ToLower().Contains(SearchFilter.ToLower()))
                         {
                             param.IsVisibleInInspector = true;
                             var parent = param.parent;
