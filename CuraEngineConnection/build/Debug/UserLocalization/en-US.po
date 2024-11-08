@@ -1,14 +1,26 @@
 msgctxt "General parameters label"
 msgstr "General parameters"
 
+msgctxt "General parameters description"
+msgstr "General parameters allow you to select presets based on the printer and advanced settings"
+
 msgctxt "Manufacturer label"
 msgstr "Manufacturer"
+
+msgctxt "Manufacturer description"
+msgstr "List of printers manufacturer"
 
 msgctxt "Printers label"
 msgstr "Printers"
 
+msgctxt "Printers description"
+msgstr "List of printers with presets."
+
 msgctxt "Extruders label"
 msgstr "Extruders"
+
+msgctxt "Extruders description"
+msgstr "Extruders of selected printer with presets."
 
 msgctxt "Extruders option Extruder"
 msgstr "Extruder"
@@ -16,17 +28,29 @@ msgstr "Extruder"
 msgctxt "Material brand label"
 msgstr "Material brand"
 
+msgctxt "Material brand description"
+msgstr "List of available material brand"
+
 msgctxt "Material brand option Generic"
 msgstr "Generic"
 
 msgctxt "Materials label"
 msgstr "Materials"
 
+msgctxt "Materials description"
+msgstr "List of materials available for the chosen brand."
+
 msgctxt "Variants label"
 msgstr "Variants"
 
+msgctxt "Variants description"
+msgstr "The variant, in case of the extruder, hold settings that have to do with nozzle size or specific settings that relate to this."
+
 msgctxt "Profiles label"
 msgstr "Profiles"
+
+msgctxt "Profiles description"
+msgstr "Profiles contain settings that modify the quality by giving them an intent. These profiles depend on the material, variant."
 
 msgctxt "Profiles option Balanced"
 msgstr "Balanced"
@@ -46,11 +70,20 @@ msgstr "Annealing"
 msgctxt "Resolutions label"
 msgstr "Resolutions"
 
+msgctxt "Resolutions description"
+msgstr "Resolution of the print by setting the layer height. Since all extruders must have the same layer height."
+
 msgctxt "Show custom parameters label"
 msgstr "Show custom parameters"
 
+msgctxt "Show custom parameters description"
+msgstr "Displays an extended list of parameters for more precise print tuning."
+
 msgctxt "Setting visibility label"
 msgstr "Setting visibility"
+
+msgctxt "Setting visibility description"
+msgstr "Extended parameters display mode."
 
 msgctxt "Setting visibility option basic"
 msgstr "basic"
@@ -67,8 +100,14 @@ msgstr "all"
 msgctxt "Auto tool parameterization label"
 msgstr "Auto tool parameterization"
 
+msgctxt "Auto tool parameterization description"
+msgstr "Automatically adjusts Cura settings (Layer Height, Line Width) based on the corresponding tool parameters (Working Length, Diameter)."
+
 msgctxt "Toolpath parsing mode label"
 msgstr "Toolpath parsing mode"
+
+msgctxt "Toolpath parsing mode description"
+msgstr "Cura’s calculated trajectory output mode. GCode based mode outputs with more detailed commands."
 
 msgctxt "Toolpath parsing mode option Simplified"
 msgstr "Simplified"
@@ -79,11 +118,20 @@ msgstr "GCode Based"
 msgctxt "Output additional parameters label"
 msgstr "Output additional parameters"
 
+msgctxt "Output additional parameters description"
+msgstr "Additionally outputs Line Type, Line Width, Line Thickness, LineFeedrate to CLData."
+
 msgctxt "Filament extruding length per frame label"
 msgstr "Filament extruding length per frame"
 
+msgctxt "Filament extruding length per frame description"
+msgstr "Abstract value of the extruded material, used to calculate values in commands."
+
 msgctxt "Output filament extruding label"
 msgstr "Output filament extruding"
+
+msgctxt "Output filament extruding description"
+msgstr "Additionally outputs filament extruding length to CLData for further calculation in commands."
 
 msgctxt "Set Cura path label"
 msgstr "Set Cura path"
@@ -100,11 +148,20 @@ msgstr "Cura not found installed. Set path to CuraEngine.exe manually. Parameter
 msgctxt "Strength label"
 msgstr "Strength"
 
+msgctxt "Strength description"
+msgstr "The following settings define the strength of your part."
+
 msgctxt "Support label"
 msgstr "Support"
 
+msgctxt "Support description"
+msgstr "Generate structures to support parts of the model which have overhangs. Without these structures, these parts would collapse during printing"
+
 msgctxt "Adhesion label"
 msgstr "Adhesion"
+
+msgctxt "Adhesion description"
+msgstr "Enable printing a brim or none. Brim will add a flat area around or under your object which is easy to cut off afterwards."
 
 msgctxt "Layer CLData_Command"
 msgstr "Layer"

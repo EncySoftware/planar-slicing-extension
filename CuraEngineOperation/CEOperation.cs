@@ -645,7 +645,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         }
         return caption;
     }
-    private string GetLabelTranslation(string id, string label, string description)
+    private string GetDescriptionTranslation(string id, string label, string description)
     {
         var desc = GetTranslation(id + " description", label + " description");
         if (desc==null || desc=="")
@@ -1498,6 +1498,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             sp.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         sp.PropID = param.id;
         sp.UnitsStr = param.unit;
+        sp.Hint = GetDescriptionTranslation(param.id, param.label, param.description);
         sp.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         sp.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
 
@@ -1556,6 +1557,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
             ip.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         ip.PropID = param.id;
         ip.UnitsStr = param.unit;
+        ip.Hint = GetDescriptionTranslation(param.id, param.label, param.description);
         ip.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         ip.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
         ip.IsStructural = new BooleanValueGetter(() => IsStructural);
@@ -1612,6 +1614,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         if (param.icon != null && param.icon != "")
             fp.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         fp.PropID = param.id;
+        fp.Hint = GetDescriptionTranslation(param.id, param.label, param.description);
         fp.UnitsStr = param.unit;
         fp.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         fp.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
@@ -1677,6 +1680,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         bp.PropID = param.id;
         bp.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         bp.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
+        bp.Hint = GetDescriptionTranslation(param.id, param.label, param.description);
         bp.IsStructural = new BooleanValueGetter(() => IsStructural);
         bp.RestoreValueProc = new DefaultPropValue(delegate()
         {
@@ -1732,6 +1736,7 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         if (param.icon != null && param.icon != "")
             ep.IconFile = CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
         ep.PropID = param.id;
+        ep.Hint = GetDescriptionTranslation(param.id, param.label, param.description);
         ep.IsStructural = new BooleanValueGetter(() => IsStructural);
         ep.PropIsExpandedGetter = new BooleanValueGetter(() => param.IsExpanded);
         ep.PropIsExpandedSetter = new BooleanValueSetter((v) => param.IsExpanded = v);
@@ -2034,6 +2039,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var strengthProp = helpers.CreateComplexProp(strengthCaption);
         if (strengthProp != null)
         {
+            strengthProp.PropID = "_Cura_strength";
+            strengthProp.Hint = GetDescriptionTranslation(strengthProp.PropID, strengthCaption, "");
             strengthProp.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
             strengthProp.PropIsExpandedGetter = new BooleanValueGetter(() => IsStrengthPropsExpanded);
             strengthProp.PropIsExpandedSetter = new BooleanValueSetter((v) => IsStrengthPropsExpanded = v);
@@ -2076,6 +2083,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var supportProp = helpers.CreateComplexProp(SupportCaption);
         if (supportProp != null)
         {
+            supportProp.PropID = "_Cura_Support";
+            supportProp.Hint = GetDescriptionTranslation(supportProp.PropID, SupportCaption, "");
             supportProp.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
             supportProp.PropIsExpandedGetter = new BooleanValueGetter(() => IsSupportPropsExpanded);
             supportProp.PropIsExpandedSetter = new BooleanValueSetter((v) => IsSupportPropsExpanded = v);
@@ -2102,7 +2111,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         {
             var PropName = GetLabelTranslation("Adhesion");
             var bp = helpers.CreateBooleanProp(PropName);
-            bp.PropID = "_Adhesion";
+            bp.PropID = "_Cura_Adhesion";
+            bp.Hint = GetDescriptionTranslation(bp.PropID, PropName, "");
             bp.IsStructural = new BooleanValueGetter(() => true);
             bp.Visible = new BooleanValueGetter(delegate ()
             {
@@ -2155,7 +2165,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var atpProp = helpers.CreateBooleanProp(atpCaption);
         if (atpProp!=null)
         {
-            atpProp.PropID = "_auto_tool_parameterization";
+            atpProp.PropID = "_Cura_auto_tool_parameterization";
+            atpProp.Hint = GetDescriptionTranslation(atpProp.PropID, atpCaption, "");
             atpProp.Visible = new BooleanValueGetter(delegate ()
             {
                 bool isVisible = true;
@@ -2187,7 +2198,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var atpProp = helpers.CreateBooleanProp(atpCaption);
         if (atpProp!=null)
         {
-            atpProp.PropID = "_output_additional_parameters";
+            atpProp.PropID = "_Cura_output_additional_parameters";
+            atpProp.Hint = GetDescriptionTranslation(atpProp.PropID, atpCaption, "");
             atpProp.IsStructural = new BooleanValueGetter(() => true);
             atpProp.Visible = new BooleanValueGetter(delegate ()
             {
@@ -2209,7 +2221,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var ofeProp = helpers.CreateBooleanProp(ofeCaption);
         if (ofeProp!=null)
         {
-            ofeProp.PropID = "_output_filament_extruding";
+            ofeProp.PropID = "_Cura_output_filament_extruding";
+            ofeProp.Hint = GetDescriptionTranslation(ofeProp.PropID, ofeCaption, "");
             ofeProp.IsStructural = new BooleanValueGetter(() => true);
             ofeProp.Visible = new BooleanValueGetter(delegate ()
             {
@@ -2232,7 +2245,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var felProp = helpers.CreateDoubleProp(felCaption);
         if (felProp!=null)
         {
-            felProp.PropID = "_filament_extruding_length";
+            felProp.PropID = "_Cura_filament_extruding_length";
+            felProp.Hint = GetDescriptionTranslation(felProp.PropID, felCaption, "");
             felProp.IsStructural = new BooleanValueGetter(() => true);
             felProp.UnitsStr = "mm";
             felProp.Visible = new BooleanValueGetter(delegate ()
@@ -2256,7 +2270,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var cldataModeProp = helpers.CreateEnumWithIDProp(cldataModeCaption);
         if (cldataModeProp!=null)
         {
-            cldataModeProp.PropID = "_toolpath_parsing_mode";
+            cldataModeProp.PropID = "_Cura_toolpath_parsing_mode";
+            cldataModeProp.Hint = GetDescriptionTranslation(cldataModeProp.PropID, cldataModeCaption, "");
             cldataModeProp.IsStructural = new BooleanValueGetter(() => true);
             cldataModeProp.Visible = new BooleanValueGetter(delegate ()
             {
@@ -2302,7 +2317,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var genProp = helpers.CreateComplexProp(GenParamsCaption);
         if (genProp!=null)
         {
-            genProp.PropID = "_general_parameters";
+            genProp.PropID = "_Cura_general_parameters";
+            genProp.Hint = GetDescriptionTranslation(genProp.PropID, GenParamsCaption, "");
             genProp.Visible = new BooleanValueGetter(delegate ()
             {
                 bool isVisible = true;
@@ -2355,7 +2371,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var svProp = helpers.CreateEnumWithIDProp(svCaption);
         if (svProp!=null)
         {
-            svProp.PropID = "_setting_visibility";
+            svProp.PropID = "_Cura_setting_visibility";
+            svProp.Hint = GetDescriptionTranslation(svProp.PropID, svCaption, "");
             svProp.IsStructural = new BooleanValueGetter(() => true);
             svProp.Visible = new BooleanValueGetter(delegate ()
             {
@@ -2382,7 +2399,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var scpProp = helpers.CreateBooleanProp(scpCaption);
         if (scpProp!=null)
         {
-            scpProp.PropID = "_show_custom_parameters";
+            scpProp.PropID = "_Cura_show_custom_parameters";
+            scpProp.Hint = GetDescriptionTranslation(scpProp.PropID, scpCaption, "");
             scpProp.IsStructural = new BooleanValueGetter(() => true);
             scpProp.Visible = new BooleanValueGetter(delegate ()
             {
@@ -2413,7 +2431,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var manufProp = helpers.CreateEnumWithIDProp(manufCaption);
         if (manufProp!=null)
         {
-            manufProp.PropID = "_manufacturer";
+            manufProp.PropID = "_Cura_manufacturer";
+            manufProp.Hint = GetDescriptionTranslation(manufProp.PropID, manufCaption, "");
             manufProp.IsStructural = new BooleanValueGetter(() => true);
             manufProp.Visible = new BooleanValueGetter(() => true);
             for (int i=0; i<CEParamsReceiver.CEParameters.MachinesBrands.Count; i++)
@@ -2435,7 +2454,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var machProp = helpers.CreateEnumWithIDProp(printCaption);
         if (machProp!=null)
         {
-            machProp.PropID = "_printers";
+            machProp.PropID = "_Cura_printers";
+            machProp.Hint = GetDescriptionTranslation(machProp.PropID, printCaption, "");
             machProp.IsStructural = new BooleanValueGetter(() => true);
             machProp.Visible = new BooleanValueGetter(() => true);
             for (int i=0; i<CEParamsReceiver.CEParameters.SelectedMachineBrand.Machines.Count; i++)
@@ -2458,7 +2478,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var extrProp = helpers.CreateEnumWithIDProp(extrCaption);
         if (extrProp!=null)
         {
-            extrProp.PropID = "_extruders";
+            extrProp.PropID = "_Cura_extruders";
+            extrProp.Hint = GetDescriptionTranslation(extrProp.PropID, extrCaption, "");
             extrProp.IsStructural = new BooleanValueGetter(() => true);
             extrProp.Visible = new BooleanValueGetter(delegate()
             {
@@ -2499,7 +2520,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var materialBrandProp = helpers.CreateEnumWithIDProp(mbCaption);
         if (materialBrandProp!=null)
         {
-            materialBrandProp.PropID = "_material_brand";
+            materialBrandProp.PropID = "_Cura_material_brand";
+            materialBrandProp.Hint = GetDescriptionTranslation(materialBrandProp.PropID, mbCaption, "");
             materialBrandProp.IsStructural = new BooleanValueGetter(() => true);
             materialBrandProp.Visible = new BooleanValueGetter(() => true);
             MaterialBrand mat = null;
@@ -2548,7 +2570,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var matProp = helpers.CreateEnumWithIDProp(matCaption);
         if (matProp!=null)
         {
-            matProp.PropID = "_materials";
+            matProp.PropID = "_Cura_materials";
+            matProp.Hint = GetDescriptionTranslation(matProp.PropID, matCaption, "");
             matProp.IsStructural = new BooleanValueGetter(() => true);
             matProp.Visible = new BooleanValueGetter(() => true);
             for (int i=0; i<CEParamsReceiver.CEParameters.SelectedMaterialBrand.Materials.Count; i++)
@@ -2586,7 +2609,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var varProp = helpers.CreateEnumWithIDProp(varCaption);
         if (varProp!=null)
         {
-            varProp.PropID = "_variants";
+            varProp.PropID = "_Cura_variants";
+            varProp.Hint = GetDescriptionTranslation(varProp.PropID, varCaption, "");
             varProp.IsStructural = new BooleanValueGetter(() => true);
             varProp.Visible = new BooleanValueGetter(delegate()
             {
@@ -2620,7 +2644,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var profProp = helpers.CreateEnumWithIDProp(profCaption);
         if (profProp!=null)
         {
-            profProp.PropID = "_profiles";
+            profProp.PropID = "_Cura_profiles";
+            profProp.Hint = GetDescriptionTranslation(profProp.PropID, profCaption, "");
             profProp.IsStructural = new BooleanValueGetter(() => true);
             profProp.Visible = new BooleanValueGetter(delegate()
             {
@@ -2656,7 +2681,8 @@ public class CuraEngineToolpath : IST_Operation, IST_OperationSolver, IExtension
         var resProp = helpers.CreateEnumWithIDProp(resCaption);
         if (resProp!=null)
         {
-            resProp.PropID = "_resolutions";
+            resProp.PropID = "_Cura_resolutions";
+            resProp.Hint = GetDescriptionTranslation(resProp.PropID, resCaption, "");
             resProp.IsStructural = new BooleanValueGetter(() => true);
             resProp.Visible = new BooleanValueGetter(delegate()
             {
