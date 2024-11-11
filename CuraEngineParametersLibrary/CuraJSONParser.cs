@@ -356,11 +356,9 @@ public class CuraJSONParser
         }
         if (IsGlobalParams)
         {
-            GlobalParams[name].IsGlobalParameter = IsGlobalParams;
         }
         else
         {
-            ExtruderParams[name].IsGlobalParameter = IsGlobalParams;
         }
     }
     private bool GetChildrenParams(JsonElement ChildrenElement, bool IsGlobalParams, string ParentName)

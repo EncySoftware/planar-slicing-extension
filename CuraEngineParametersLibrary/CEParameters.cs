@@ -1025,18 +1025,12 @@ public class Parameters
         }
     }
 
-    public bool IsParameterEnabled(string ParameterName, bool isGlobalParameter)
+    public bool IsParameterEnabled(string parameterName)
     {
         var paramsParser = new ParametersParser();
-        if (isGlobalParameter)
-        {
-            return paramsParser.IsParameterEnabled(ParameterName, ref GlobalParams, ref ExtruderParams);
-        }
-        else
-        {
-            return paramsParser.IsParameterEnabled(ParameterName, ref ExtruderParams, ref GlobalParams);
-        }
+        return paramsParser.IsParameterEnabled(parameterName, ref GlobalParams, ref ExtruderParams);
     }
+    
     public double MinimumValue(string ParameterName, bool isGlobalParameter)
     {
         var paramsParser = new ParametersParser();
@@ -1429,6 +1423,7 @@ public class Parameters
         AcceptDefaultParametersFromConfigs();
         AcceptUserParameters();     
     }
+    
     public void AddUserParameter(string key, string value, bool isGlobalParameter)
     {
         Parameter param = null;

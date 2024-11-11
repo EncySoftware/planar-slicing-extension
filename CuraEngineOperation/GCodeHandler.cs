@@ -1,4 +1,4 @@
-using STMCDFormerTypes;
+using CAMAPI.MCDFormerTypes;
 using STTypes;
 using CuraEngineParametersLibrary;
 namespace CuraEngineOperation;
@@ -7,84 +7,40 @@ public static class FeedConverter
 {
     public static int ConvertToCLDataFeed(int typeFeed)
     {
-        TSTFeedTypeFlag feed = TSTFeedTypeFlag.ffLongNext;
-        switch (typeFeed)
+        var feed = typeFeed switch
         {
-            case 1:
-                feed = TSTFeedTypeFlag.ffFinish;
-                break;
-            case 2:
-                feed = TSTFeedTypeFlag.ffEngage;
-                break;
-            case 3:
-                feed = TSTFeedTypeFlag.ffFinish;
-                break;
-            case 4:
-                feed = TSTFeedTypeFlag.ffRetract;
-                break;
-            case 5:
-                feed = TSTFeedTypeFlag.ffFirst;
-                break;
-            case 6:
-                feed = TSTFeedTypeFlag.ffWorking;
-                break;
-            case 7:
-                feed = TSTFeedTypeFlag.ffRetract;
-                break;
-            case 8:
-                feed = TSTFeedTypeFlag.ffNext;
-                break;
-            case 9:
-                feed = TSTFeedTypeFlag.ffLongNext;
-                break;
-            case 10:
-                feed = TSTFeedTypeFlag.ffRetract;
-                break;
-            case 11:
-                feed = TSTFeedTypeFlag.ffPlunge;
-                break;
-        }
+            1 => TFeedTypeFlag.affFinish,
+            2 => TFeedTypeFlag.affEngage,
+            3 => TFeedTypeFlag.affFinish,
+            4 => TFeedTypeFlag.affRetract,
+            5 => TFeedTypeFlag.affFirst,
+            6 => TFeedTypeFlag.affWorking,
+            7 => TFeedTypeFlag.affRetract,
+            8 => TFeedTypeFlag.affNext,
+            9 => TFeedTypeFlag.affLongNext,
+            10 => TFeedTypeFlag.affRetract,
+            11 => TFeedTypeFlag.affPlunge,
+            _ => TFeedTypeFlag.affLongNext
+        };
         return (int)feed;
     }
     public static string GetFeedName(int typeFeed)
     {
-        var feed = "WALL-OUTER";
-        switch (typeFeed)
+        var feed = typeFeed switch
         {
-            case 1:
-                feed = "WALL-OUTER";
-                break;
-            case 2:
-                feed = "WALL-INNER";
-                break;
-            case 3:
-                feed = "SKIN";
-                break;
-            case 4:
-                feed = "SUPPORT";
-                break;
-            case 5:
-                feed = "SKIRT";
-                break;
-            case 6:
-                feed = "FILL";
-                break;
-            case 7:
-                feed = "SUPPORT-INFILL";
-                break;
-            case 8:
-                feed = "MOVE-COMBING";
-                break;
-            case 9:
-                feed = "MOVE-RETRACTION";
-                break;
-            case 10:
-                feed = "SUPPORT-INTERFACE";
-                break;
-            case 11:
-                feed = "PRIME-TOWER";
-                break;
-        }
+            1 => "WALL-OUTER",
+            2 => "WALL-INNER",
+            3 => "SKIN",
+            4 => "SUPPORT",
+            5 => "SKIRT",
+            6 => "FILL",
+            7 => "SUPPORT-INFILL",
+            8 => "MOVE-COMBING",
+            9 => "MOVE-RETRACTION",
+            10 => "SUPPORT-INTERFACE",
+            11 => "PRIME-TOWER",
+            _ => "WALL-OUTER"
+        };
         return feed;
     }
 }
@@ -158,7 +114,7 @@ public class GCodeCommand: IGCodeLine
         parameterValue = 0;
         return false;
     }
-    private void AddFilamentExtrudingToCLData(IST_CLDReceiver? clf, bool isG0)
+    private void AddFilamentExtrudingToCLData(ICamApiCLDReceiver? clf, bool isG0)
     {
         double value;
         if (IsOutputFilamentExtruding)
@@ -182,7 +138,7 @@ public class GCodeCommand: IGCodeLine
             }
         }
     }
-    private void AddXCoordinateToCLData(IST_CLDReceiver? clf, double prevX)
+    private void AddXCoordinateToCLData(ICamApiCLDReceiver? clf, double prevX)
     {
         double value;
         if (TryGetDoubleValue("X", out value))
@@ -193,7 +149,7 @@ public class GCodeCommand: IGCodeLine
         else
             pX = prevX;
     }
-    private void AddYCoordinateToCLData(IST_CLDReceiver? clf, double prevY)
+    private void AddYCoordinateToCLData(ICamApiCLDReceiver? clf, double prevY)
     {
         double value;
         if (TryGetDoubleValue("Y", out value))
@@ -204,7 +160,7 @@ public class GCodeCommand: IGCodeLine
         else
             pY = prevY;
     }
-    public void AddToCLData(IST_CLDReceiver? clf, double prevX, double prevY, double prevZ, GCodeFeedType prevFeedType, double prevFeedValue, bool isStartGCode = false)
+    public void AddToCLData(ICamApiCLDReceiver? clf, double prevX, double prevY, double prevZ, GCodeFeedType prevFeedType, double prevFeedValue, bool isStartGCode = false)
     {
         double value;
         bool isAdded = false;
@@ -487,7 +443,7 @@ public class GCodeComment: IGCodeLine
     {
         return GCodeLineType.ltComment;
     }
-    public void AddToCLData(IST_CLDReceiver? clf)
+    public void AddToCLData(ICamApiCLDReceiver? clf)
     {
         if (Comment.Contains("LAYER_COUNT") || Comment.Contains("PRINT.") || Comment.Contains("TIME_ELAPSED"))
             clf.AddComment(Comment);
@@ -505,7 +461,7 @@ public class GCodeMesh: IGCodeLine
     {
         return GCodeLineType.ltMesh;
     }
-    public void AddToCLData(IST_CLDReceiver? clf)
+    public void AddToCLData(ICamApiCLDReceiver? clf)
     {
         
     }
@@ -541,7 +497,7 @@ public class GCodeFeed: IGCodeLine
     {
         return GCodeLineType.ltFeed;
     }
-    public void AddToCLData(IST_CLDReceiver? clf)
+    public void AddToCLData(ICamApiCLDReceiver? clf)
     {
          clf.OutStandardFeed(FeedConverter.ConvertToCLDataFeed((int)FeedType));
     }
@@ -636,7 +592,7 @@ public class GCodeLayout
             Console.WriteLine("Exception: " + e.Message);
         }
     }
-    public void AddToCLData(IST_CLDReceiver? clf, TST3DBox BoundingBox, bool IsOutputFilamentExtruding, double FilamentExtrudingLength = 100)
+    public void AddToCLData(ICamApiCLDReceiver? clf, TST3DBox BoundingBox, bool IsOutputFilamentExtruding, double FilamentExtrudingLength = 100)
     {
         if (clf!=null)
         {
@@ -656,7 +612,7 @@ public class GCodeLayout
                     var ind = Block.LayerInd+1;
                     var LayerCaption = OnGCodeCommandTranslation("Layer"); 
                     var layer = LayerCaption + ": " + ind; 
-                    clf.BeginItem(TST_CLDItemType.itGroup, layer, layer);
+                    clf.BeginItem(TCLDItemType.aitGroup, layer, layer);
                 }
                        
                 for (var j=0; j<Block.GCodeLines.Count; j++)
@@ -696,7 +652,7 @@ public class GCodeLayout
                                 LastFeedType = FeedLine.FeedType;
                                 var feedName = FeedConverter.GetFeedName((int)LastFeedType); 
                                 var captionFeed = OnGCodeCommandTranslation(feedName);
-                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, captionFeed);
+                                clf.BeginItem(TCLDItemType.aitGroup, feedName, captionFeed);
                                 isFeedSectionOpened = true;
                             }    
                             if (LastFeedType != FeedLine.FeedType)
@@ -709,7 +665,7 @@ public class GCodeLayout
                                 }       
                                 var feedName = FeedConverter.GetFeedName((int)LastFeedType); 
                                 var captionFeed = OnGCodeCommandTranslation(feedName);
-                                clf.BeginItem(TST_CLDItemType.itGroup, feedName, captionFeed);
+                                clf.BeginItem(TCLDItemType.aitGroup, feedName, captionFeed);
                                 isFeedSectionOpened = true;
                             }  
                             //FeedLine.AddToCLData(clf);          

@@ -23,7 +23,7 @@ public class ExtensionFactory : IExtensionFactory
         {
             ret.Code = TResultStatusCode.rsSuccess;
             ret.Description = string.Empty;
-            return new CuraEngineOperation.CuraEngineToolpath();
+            return new CuraEngineOperation.CuraEngineOperationSolver();
         } else {
             ret.Code = TResultStatusCode.rsError;
             ret.Description = "Unknown extension identifier: " + extensionIdent;
