@@ -45,7 +45,7 @@ public class Localize
         var filename = "";
         filename = isUserTranslations ? ".po" : "\\fdmprinter.def.json.po";  
 
-        path = filePath + _currentLang + filename;
+        path = Path.Combine(filePath, _currentLang + filename);
         if (File.Exists(path))
         {
             isFileExists = true;

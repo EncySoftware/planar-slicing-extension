@@ -105,7 +105,7 @@ public class CuraEngineOperationSolver :
             _localization = new Localize(Info);
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
             var userLangPath = Path.Combine(Path.GetDirectoryName(assemblyLocation) ?? "", "UserLocalization");
-            _localization.ReadMainTranslations(_curaLibraryPath.CuraPath + @"share\cura\resources\i18n\");
+            _localization.ReadMainTranslations(_curaLibraryPath.CuraPath + @"share\cura\resources\i18n");
             _localization.ReadUserTranslations(userLangPath);
             _warningMessage = _localization.GetLabelTranslation("Path_warning_message", _warningMessage);
 
