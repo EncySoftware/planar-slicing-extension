@@ -12,7 +12,8 @@ using CuraEngineNetWrapper;
 using STCustomPropTypes;
 using STTypes;
 using STXMLPropTypes;
-
+using Geometry.VecMatrLib;
+using CAMAPI.UIDialogs;
 namespace CuraEngineOperation;
 
 public class CuraEngineOperationSolver :
@@ -65,7 +66,7 @@ public class CuraEngineOperationSolver :
     
     private const string HandlerIdentInitModelFormers = "InitModelFormers";
     private const string HandlerIdentLoadSaveXml = "LoadSaveXml";
-
+    private bool IsCorrectInitSolver = false;
     private string _warningMessage = "Cura not found installed. Set path to CuraEngine.exe manually.\nParameters tab -> Set Cura path";
     
     /// <summary>
@@ -94,39 +95,75 @@ public class CuraEngineOperationSolver :
             // cura engine parameters
             _curaParamsReceiver = new ParamsReceiver();
             
-            // path to cura library
-            _curaLibraryPath = new CuraLibraryPath(operation.XMLProp);
-            if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
-                throw new Exception(_warningMessage);
-            _curaParamsReceiver.CEParameters.CuraPath = _curaLibraryPath.CuraPath;
-            _curaParamsReceiver.CEParameters.ReadAllParametersAndConfigs();
-            
-            // localization
-            _localization = new Localize(Info);
-            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            var userLangPath = Path.Combine(Path.GetDirectoryName(assemblyLocation) ?? "", "UserLocalization");
-            _localization.ReadMainTranslations(_curaLibraryPath.CuraPath + @"share\cura\resources\i18n");
-            _localization.ReadUserTranslations(userLangPath);
-            _warningMessage = _localization.GetLabelTranslation("Path_warning_message", _warningMessage);
-
-            // builder of prop iterators
-            _operationProps = new OperationProps(Info, operation, _curaParamsReceiver.CEParameters, _localization, _curaLibraryPath);
-            
             // object to manage cura calculating tool path
             _curaControlProcess = new CuraEngineControlProcess(context.UpdateHandler, Info);
-            
-            // event handler, so we can execute some non-mandatory methods of ICamApiTechOperationSolver
-            _operationEventHandlerInitModelFormers ??= new OperationInitModelFormers();
-            operation.RegisterHandler(HandlerIdentInitModelFormers, _operationEventHandlerInitModelFormers, new ListString(), out resultStatus);
-            _operationEventHandlerLoadSaveXml ??= new OperationLoadSaveXmlProp(_curaParamsReceiver, _operationProps, _curaLibraryPath);
-            operation.RegisterHandler(HandlerIdentLoadSaveXml, _operationEventHandlerLoadSaveXml, new ListString(), out resultStatus);
+
+            // path to cura library
+            _localization = new Localize(Info);
+            _warningMessage = _localization.GetLabelTranslation("Path_warning_message", _warningMessage);
+
+            // user localization of parameters
+            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            var userLangPath = Path.Combine(Path.GetDirectoryName(assemblyLocation) ?? "", "UserLocalization");
+            _localization.ReadUserTranslations(userLangPath);  
+
+            _curaLibraryPath = new CuraLibraryPath(operation.XMLProp);
+            if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
+            {
+                _curaControlProcess.Logger.Warning(_warningMessage);
+                ShowMessageBox(_warningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
+            }
+            else
+            {
+                InitConfigurations(ref resultStatus);
+            }
         } catch (Exception e)
         {
             resultStatus.Code = TResultStatusCode.rsError;
             resultStatus.Description = e.Message;
         }
     }
-    
+    private void InitConfigurations(ref TResultStatus resultStatus)
+    {
+        if (!IsCorrectInitSolver)
+        {
+            try
+            {
+                var operation = _operationComWrapper.Instance;
+                if (operation == null)
+                    throw new Exception("Operation is null");
+
+                _localization.ReadMainTranslations(_curaLibraryPath.CuraPath + @"share\cura\resources\i18n");
+                _curaParamsReceiver.CEParameters.CuraPath = _curaLibraryPath.CuraPath;
+                _curaParamsReceiver.CEParameters.ReadAllParametersAndConfigs();
+                            
+                // builder of prop iterators
+                _operationProps = new OperationProps(Info, operation, _curaParamsReceiver.CEParameters, _localization, _curaLibraryPath);
+                
+                // event handler, so we can execute some non-mandatory methods of ICamApiTechOperationSolver
+                _operationEventHandlerInitModelFormers ??= new OperationInitModelFormers();
+                operation.RegisterHandler(HandlerIdentInitModelFormers, _operationEventHandlerInitModelFormers, new ListString(), out resultStatus);
+                _operationEventHandlerLoadSaveXml ??= new OperationLoadSaveXmlProp(_curaParamsReceiver, _operationProps, _curaLibraryPath);
+                operation.RegisterHandler(HandlerIdentLoadSaveXml, _operationEventHandlerLoadSaveXml, new ListString(), out resultStatus);
+
+                IsCorrectInitSolver = true;
+            } catch (Exception e)
+            {
+                resultStatus.Code = TResultStatusCode.rsError;
+                resultStatus.Description = e.Message;
+            } 
+        }
+    }
+    private int ShowMessageBox(string Msg, TMessageDialogType DlgType, ushort Buttons, TUIButtonType DefaultButton, string ATitle)
+    {
+        using var box = SystemExtensionFactory.GetSingletonExtension<ICAMAPI_UIDialogsHelper>("Extension.UIDialogs.Core", Info);
+
+
+        // var extension = Info.InstanceInfo.ExtensionManager.GetSingletonExtension("Extension.UIDialogs.Core", out TResultStatus ret);
+        // var uiDialog = (ICAMAPI_UIDialogsHelper)extension;
+        ushort buttons = (ushort)TUIButtonTypeFlags.btfOk;
+        return box.Instance.MessageBox(Msg, DlgType, buttons, DefaultButton, ATitle);
+    }
     /// <summary>
     /// Nothing to do
     /// </summary>
@@ -148,10 +185,26 @@ public class CuraEngineOperationSolver :
         
         try
         {
-            if (_curaParamsReceiver == null)
-                throw new Exception("CuraParamsReceiver is null");
-            iterator = _operationProps?.CreateIterator(_curaParamsReceiver.CEParameters);
-            return true;
+            var operation = _operationComWrapper.Instance;
+            if (operation != null)
+            {
+                if (!_curaLibraryPath.CheckLibraryExists(operation.XMLProp))
+                {
+                    _curaControlProcess.Logger.Warning(_warningMessage);
+                    ShowMessageBox(_warningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
+                    return false;
+                }
+                else 
+                {
+                    InitConfigurations(ref resultStatus);
+                }
+
+                if (_curaParamsReceiver == null)
+                    throw new Exception("CuraParamsReceiver is null");
+                iterator = _operationProps?.CreateIterator(_curaParamsReceiver.CEParameters);
+                return true;          
+            }  
+            return false;  
         }
         catch (Exception e)
         {
@@ -182,8 +235,12 @@ public class CuraEngineOperationSolver :
             if (xmlPropCom.Instance == null)
                 throw new Exception("XMLProp is null");
             if (!_curaLibraryPath?.CheckLibraryExists(xmlPropCom.Instance) ?? true)
-                throw new Exception(_warningMessage);
-        
+            {
+                _curaControlProcess.Logger.Warning(_warningMessage);
+                ShowMessageBox(_warningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
+                return;
+            }
+            InitConfigurations(ref resultStatus);
             FillParametersAndCalculate(techOperation, cldFormer);
             CuraEngineConnectionHelper.FinalizeLib();
         }
@@ -234,17 +291,18 @@ public class CuraEngineOperationSolver :
                 var tolerance = GetRealTolerance(techOperation);
                 
                 // get face list
-                var newLCS = techOperation.LCS; 
+                //TST3DMatrix newLCS = ((T3DMatrix)techOperation.LCS).InverseMatrix(); 
+                TST3DMatrix newLCS = techOperation.LCS;    
                 using var modelFormerJobAssignmentCom = new ComWrapper<ICamApiModelFormer>(techOperation.ModelFormerJobAssignment);
                 var modelFormerJobAssignment = modelFormerJobAssignmentCom.Instance
                     ?? throw new Exception("ModelFormerJobAssignment is null");
-                using var faceListCom = new ComWrapper<ICamApiFaceList>(modelFormerJobAssignment.GetFaceList(techOperation.LCS));
+                using var faceListCom = new ComWrapper<ICamApiFaceList>(modelFormerJobAssignment.GetFaceList(newLCS));
                 var faceList = faceListCom.Instance
                     ?? throw new Exception("FaceList is null");
               
                 if (faceList.Count > 0)
                 { 
-                    _curaControlProcess.boundingBox = modelFormerJobAssignment.GetBoundingBox(techOperation.LCS);
+                    _curaControlProcess.boundingBox = modelFormerJobAssignment.GetBoundingBox(newLCS);
                     newLCS.vT = AcceptBoxToLCS(newLCS, _curaControlProcess.boundingBox); //       newLCS.vT + newLCS.vZ * bb.Min.Z
                     using var faceListNewCom = new ComWrapper<ICamApiFaceList>(modelFormerJobAssignment.GetFaceList(newLCS));
                     var faceListNew = faceListNewCom.Instance
@@ -257,7 +315,7 @@ public class CuraEngineOperationSolver :
                     using var modelFormerPartCom = new ComWrapper<ICamApiModelFormer>(techOperation.ModelFormerPart);
                     var modelFormerPart = modelFormerPartCom.Instance
                         ?? throw new Exception("ModelFormerPart is null");
-                    _curaControlProcess.boundingBox = modelFormerPart.GetBoundingBox(techOperation.LCS);
+                    _curaControlProcess.boundingBox = modelFormerPart.GetBoundingBox(newLCS);
                     newLCS.vT = AcceptBoxToLCS(newLCS, _curaControlProcess.boundingBox);
                     using var faceListNewCom = new ComWrapper<ICamApiFaceList>(modelFormerPart.GetFaceList(newLCS));
                     var faceListNew = faceListNewCom.Instance
@@ -309,16 +367,10 @@ public class CuraEngineOperationSolver :
         }  
     }
   
-    private TST3DPoint AcceptBoxToLCS(TST3DMatrix lcs, TST3DBox b)
+    private TST3DPoint AcceptBoxToLCS(TST3DMatrix lcs, TST3DBox b) //newLCS.vT + newLCS.vZ * bb.Min.Z
     {
-        var pZ = lcs.vZ;
-        pZ.X *= b.Min.Z;
-        pZ.Y *= b.Min.Z;
-        pZ.Z *= b.Min.Z;
-        var pT = lcs.vT;
-        pT.X += pZ.X;
-        pT.Y += pZ.Y;
-        pT.Z += pZ.Z;
+        var pT = lcs.vT + (T3DPoint)lcs.vZ * b.Min.Z;
+
         return pT;
     }
     

@@ -222,6 +222,17 @@ public class OperationProps : IDisposable
             var genPropIterator = Factory.CreateSimplePropIterator(extensionManager);
             FillGeneralParameters(genPropIterator);
             dialogWindow.SetPropIterator(genPropIterator);
+            dialogWindow.SetPropIteratorGetter(new PropIteratorGetter(delegate()
+            {
+                var spiWrapper =  new ComWrapper<IST_SimplePropIterator>(PropHelpers?.CreateSimplePropIterator());
+                var spi = spiWrapper?.Instance;
+                if (spi == null)
+                    throw new Exception("Failed to create SimplePropIterator for General parameters");   
+                FillGeneralParameters(spi);
+                spi.MoveToRoot();
+                return (IST_CustomPropIterator)spi;
+            }));
+
             var buttons = TUIButtonTypeFlags.btfOk;
             dialogWindow.SetButtons((ushort)buttons);
             dialogWindow.Show();
@@ -282,6 +293,7 @@ public class OperationProps : IDisposable
         if (extrudersProp != null)
         {
             extrudersProp.PropID = "_Cura_extruders";
+            extrudersProp.IsStructural = new BooleanValueGetter(() => true);
             extrudersProp.Hint = _localize.GetDescriptionTranslation(extrudersProp.PropID, extrudersCaption, "");
             extrudersProp.Visible = new BooleanValueGetter(() => _curaParameters.SelectedMachine.Extruders.Count > 0);
             foreach (var extruder in _curaParameters.SelectedMachine.Extruders)
@@ -569,7 +581,7 @@ public class OperationProps : IDisposable
         ofeProp.Visible = new BooleanValueGetter(delegate ()
         {
             _isOutputFilamentExtrudingVisible = AcceptedByFilter(ofeCaption)
-                                                && Tpm == ToolpathParsingMode.tpmSimplified;
+                                                && Tpm == ToolpathParsingMode.tpmGCodeBased;
             return _isOutputFilamentExtrudingVisible;
         });
         ofeProp.ValueGetter = new BooleanValueGetter(() => IsOutputFilamentExtruding);
@@ -664,11 +676,11 @@ public class OperationProps : IDisposable
     
     private void FillPropIteratorByAllParams(IST_SimplePropIterator simpleIterator)
     {
-        var filePath = _curaParameters.CuraPath + @"share\cura\resources\setting_visibility\all.cfg";
+        var filePath = _curaParameters.CuraPath + @"share\cura\resources\setting_visibility\basic.cfg";
         if (!File.Exists(filePath))
             return;
         
-        var sr = new StreamReader(_curaParameters.CuraPath + @"share\cura\resources\setting_visibility\basic.cfg");
+        var sr = new StreamReader(filePath);
         var line = sr.ReadLine();
         while (line != null)
         {
@@ -752,6 +764,8 @@ public class OperationProps : IDisposable
         using var supportPropCom = new ComWrapper<IST_CustomComplexPropHelper>(PropHelpers.CreateComplexProp(supportCaption));
         var supportProp = supportPropCom.Instance
             ?? throw new Exception("Failed to create ComplexProp for " + supportCaption);
+        supportProp.PropID = "_Cura_support";
+        supportProp.Hint = _localize.GetDescriptionTranslation(supportProp.PropID, supportCaption, "");
         supportProp.IconFile = @"$(SUPPLEMENT_FOLDER)\operations\TypeImages\MeasuringItem.bmp";
         supportProp.PropIsExpandedGetter = new BooleanValueGetter(() => _isSupportPropsExpanded);
         supportProp.PropIsExpandedSetter = new BooleanValueSetter(v => _isSupportPropsExpanded = v);

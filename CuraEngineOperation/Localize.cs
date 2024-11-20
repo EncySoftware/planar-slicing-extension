@@ -30,7 +30,8 @@ public class Localize
     
     public void ReadMainTranslations(string filePath)
     {
-        _langCatalog = ReadTranslations(filePath);
+        if (_langCatalog==null)
+            _langCatalog = ReadTranslations(filePath);
     }
     
     public void ReadUserTranslations(string filePath)
@@ -53,7 +54,7 @@ public class Localize
         else
         {
             var lang = _currentLang.Replace("-", "_");
-            path = filePath + lang + filename;
+            path = Path.Combine(filePath, lang + filename);
             if (File.Exists(path))
             {
                 isFileExists = true;

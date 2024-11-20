@@ -9,9 +9,8 @@
 	</SCNameSpace>
 
 
-	<SCType ID="TCuraEngineToolpathOp" Caption="Planar slicing" type="TSTMillOp" Enabled = "True">
+	<SCType ID="TCuraEngineToolpathOp" Caption="Planar slicing" type="TSTMillExtensionOp" Enabled = "True">
 		<GUID DefaultValue="{443DC844-5214-47F9-9C1F-08783A332C4B}"/>
-		<ContainerID DefaultValue="{6C19D035-D02C-4B0C-A8E0-9E33F15054F7}"/>
 		<SolverID DefaultValue="CuraEngineToolpath"/>
 
 		<Name DefaultValue="Planar slicing"/>
@@ -63,10 +62,6 @@
 			</SCType>
 		</SCType>
 		<!-- 'Strategy' -->
-		<SCType ID="AxesBrakeUsingMode" Caption="Axes brakes using mode" type="Enumerated" DefaultValue="DoNotUse">
-			<SCType ID="DoNotUse" Caption="Do not use brakes" type="None"/>
-			<SCType ID="Always" Caption="Use brakes" type="None"/>
-		</SCType>
 		<SCType ID="CuraUserParameterArray" Caption="Array of user parameters"
 				Type="Array"
 				CollectionKeyField="Name"

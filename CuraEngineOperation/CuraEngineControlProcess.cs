@@ -57,7 +57,7 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess, IDisposable
     /// <summary>
     /// Logger object
     /// </summary>
-    private IExtensionLogger? Logger => _loggerComWrapper.Instance;
+    public IExtensionLogger? Logger => _loggerComWrapper.Instance;
 
     public CuraEngineControlProcess(ICamApiTechOperationProgressUpdateHandler updateHandler, IExtensionInfo? info)
     {
