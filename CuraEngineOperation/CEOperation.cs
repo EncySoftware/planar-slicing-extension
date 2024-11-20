@@ -14,6 +14,7 @@ using STTypes;
 using STXMLPropTypes;
 using Geometry.VecMatrLib;
 using CAMAPI.UIDialogs;
+using System.Runtime.InteropServices;
 namespace CuraEngineOperation;
 
 public class CuraEngineOperationSolver :
@@ -171,11 +172,12 @@ public class CuraEngineOperationSolver :
     {
         Operation?.UnregisterHandler(HandlerIdentInitModelFormers, out _);
         Operation?.UnregisterHandler(HandlerIdentLoadSaveXml, out _);
+        Marshal.FinalReleaseComObject(_operationComWrapper?.Instance);
         _operationComWrapper?.Dispose();
         _curaControlProcess?.Dispose();
         _operationProps?.Dispose();
     }
-
+    
     public bool GetPropIterator(string pageId,
         out IST_CustomPropIterator? iterator,
         out TResultStatus resultStatus)

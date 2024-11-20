@@ -12,7 +12,7 @@
 	<SCType ID="TCuraEngineToolpathOp" Caption="Planar slicing" type="TSTMillExtensionOp" Enabled = "True">
 		<GUID DefaultValue="{443DC844-5214-47F9-9C1F-08783A332C4B}"/>
 		<SolverID DefaultValue="CuraEngineToolpath"/>
-
+		<ContainerID DefaultValue="{E69F4DE4-0600-4369-8738-B3608AC7AB46}"/>
 		<Name DefaultValue="Planar slicing"/>
 		<Comment DefaultValue="Planar slicing"/>
 		<Icon DefaultValue="UltimakerCuraPlugin_icon.png"/>
