@@ -199,7 +199,7 @@ public class OperationProps : IDisposable
             return;
         
         genProp.PropID = "_Cura_general_parameters";
-        genProp.Hint = _localize.GetDescriptionTranslation(genProp.PropID, genParamsCaption, "");
+        genProp.Hint = _localize.GetDescriptionTranslation(genProp.PropID, "General parameters", "");
         if (_curaParameters.GlobalParams.TryGetValue(genProp.PropID, out var param))
             param.ExistsInPropIterator = true;
         genProp.IconFile = "";
@@ -253,7 +253,7 @@ public class OperationProps : IDisposable
         if (manufProp != null)
         {
             manufProp.PropID = "_Cura_manufacturer";
-            manufProp.Hint = _localize.GetDescriptionTranslation(manufProp.PropID, manufCaption, "");
+            manufProp.Hint = _localize.GetDescriptionTranslation(manufProp.PropID, "Manufacturer", "");
             manufProp.IsStructural = new BooleanValueGetter(() => true);
             foreach (var manuf in _curaParameters.MachinesBrands)
                 manufProp.Add(manuf.name, manuf.name, "");
@@ -273,7 +273,7 @@ public class OperationProps : IDisposable
         if (machProp != null)
         {
             machProp.PropID = "_Cura_printers";
-            machProp.Hint = _localize.GetDescriptionTranslation(machProp.PropID, printCaption, "");
+            machProp.Hint = _localize.GetDescriptionTranslation(machProp.PropID, "Printers", "");
             machProp.IsStructural = new BooleanValueGetter(() => true);
             foreach (var mach in _curaParameters.SelectedMachineBrand.Machines.Where(mach => mach.isVisible))
                 machProp.Add(mach.id, mach.name, "");
@@ -294,7 +294,7 @@ public class OperationProps : IDisposable
         {
             extrudersProp.PropID = "_Cura_extruders";
             extrudersProp.IsStructural = new BooleanValueGetter(() => true);
-            extrudersProp.Hint = _localize.GetDescriptionTranslation(extrudersProp.PropID, extrudersCaption, "");
+            extrudersProp.Hint = _localize.GetDescriptionTranslation(extrudersProp.PropID, "Extruders", "");
             extrudersProp.Visible = new BooleanValueGetter(() => _curaParameters.SelectedMachine.Extruders.Count > 0);
             foreach (var extruder in _curaParameters.SelectedMachine.Extruders)
             {
@@ -329,7 +329,7 @@ public class OperationProps : IDisposable
         if (materialBrandProp != null)
         {
             materialBrandProp.PropID = "_Cura_material_brand";
-            materialBrandProp.Hint = _localize.GetDescriptionTranslation(materialBrandProp.PropID, mbCaption, "");
+            materialBrandProp.Hint = _localize.GetDescriptionTranslation(materialBrandProp.PropID, "Material brand", "");
             materialBrandProp.IsStructural = new BooleanValueGetter(() => true);
             foreach (var mat in _curaParameters.MaterialsBrands)
             {
@@ -375,7 +375,7 @@ public class OperationProps : IDisposable
         if (matProp != null)
         {
             matProp.PropID = "_Cura_materials";
-            matProp.Hint = _localize.GetDescriptionTranslation(matProp.PropID, matCaption, "");
+            matProp.Hint = _localize.GetDescriptionTranslation(matProp.PropID, "Materials", "");
             matProp.IsStructural = new BooleanValueGetter(() => true);
             foreach (var mat in _curaParameters.SelectedMaterialBrand.Materials)
             {
@@ -402,7 +402,7 @@ public class OperationProps : IDisposable
         if (varProp != null)
         {
             varProp.PropID = "_Cura_variants";
-            varProp.Hint = _localize.GetDescriptionTranslation(varProp.PropID, varCaption, "");
+            varProp.Hint = _localize.GetDescriptionTranslation(varProp.PropID, "Variants", "");
             varProp.IsStructural = new BooleanValueGetter(() => true);
             varProp.Visible = new BooleanValueGetter(() => _curaParameters.Variants.Count > 0);
             foreach (var variant in _curaParameters.Variants)
@@ -423,7 +423,7 @@ public class OperationProps : IDisposable
         if (profProp != null)
         {
             profProp.PropID = "_Cura_profiles";
-            profProp.Hint = _localize.GetDescriptionTranslation(profProp.PropID, profCaption, "");
+            profProp.Hint = _localize.GetDescriptionTranslation(profProp.PropID, "Profiles", "");
             profProp.IsStructural = new BooleanValueGetter(() => true);
             profProp.Visible = new BooleanValueGetter(() => _curaParameters.IntentCategories.Count > 0);
             foreach (var pr in _curaParameters.IntentCategories)
@@ -448,7 +448,7 @@ public class OperationProps : IDisposable
         if (resProp != null)
         {
             resProp.PropID = "_Cura_resolutions";
-            resProp.Hint = _localize.GetDescriptionTranslation(resProp.PropID, resCaption, "");
+            resProp.Hint = _localize.GetDescriptionTranslation(resProp.PropID, "Resolutions", "");
             resProp.IsStructural = new BooleanValueGetter(() => true);
             resProp.Visible = new BooleanValueGetter(() =>
                 _curaParameters.SelectedIntentCategory != null &&
@@ -479,7 +479,7 @@ public class OperationProps : IDisposable
             ?? throw new Exception("Failed to create BooleanProp for " + atpCaption);
         
         atpProp.PropID = "_Cura_auto_tool_parameterization";
-        atpProp.Hint = _localize.GetDescriptionTranslation(atpProp.PropID, atpCaption, "");
+        atpProp.Hint = _localize.GetDescriptionTranslation(atpProp.PropID, "Auto tool parameterization", "");
         if (_curaParameters.GlobalParams.TryGetValue(atpProp.PropID, out var param))
             param.ExistsInPropIterator = true;
         atpProp.Visible = new BooleanValueGetter(() => AcceptedByFilter(atpCaption));
@@ -524,14 +524,11 @@ public class OperationProps : IDisposable
         var cldataModeProp = cldataModePropCom.Instance
             ?? throw new Exception("Failed to create EnumWithIDProp for " + cldataModeCaption);
         cldataModeProp.PropID = "_Cura_toolpath_parsing_mode";
-        cldataModeProp.Hint = _localize.GetDescriptionTranslation(cldataModeProp.PropID, cldataModeCaption, "");
+        cldataModeProp.Hint = _localize.GetDescriptionTranslation(cldataModeProp.PropID, "Toolpath parsing mode", "");
         if (_curaParameters.GlobalParams.TryGetValue(cldataModeProp.PropID, out var param))
             param.ExistsInPropIterator = true;
         cldataModeProp.IsStructural = new BooleanValueGetter(() => true);
-        cldataModeProp.Visible = new BooleanValueGetter(() => AcceptedByFilter(cldataModeCaption)
-                                                              || _isOutputAdditionalClDataParametersVisible
-                                                              || _isOutputFilamentExtrudingVisible
-                                                              || _filamentExtrudingLengthVisible);
+
         var smplCaption = _localize.GetEnumsTranslation("_toolpath_parsing_mode", "Toolpath parsing mode", "Simplified", "Simplified");
         cldataModeProp.Add("Simplified", smplCaption, ""); 
         var gcodeCaption = _localize.GetEnumsTranslation("_toolpath_parsing_mode", "Toolpath parsing mode", "GCodeBased", "GCode based");
@@ -551,7 +548,7 @@ public class OperationProps : IDisposable
         var atpProp = atpPropCom.Instance
             ?? throw new Exception("Failed to create BooleanProp for " + atpCaption);
         atpProp.PropID = "_Cura_output_additional_parameters";
-        atpProp.Hint = _localize.GetDescriptionTranslation(atpProp.PropID, atpCaption, "");
+        atpProp.Hint = _localize.GetDescriptionTranslation(atpProp.PropID, "Output additional parameters", "");
         if (_curaParameters.GlobalParams.TryGetValue(atpProp.PropID, out param))
             param.ExistsInPropIterator = true;
         atpProp.IsStructural = new BooleanValueGetter(() => true);
@@ -574,7 +571,7 @@ public class OperationProps : IDisposable
         var ofeProp = ofePropCom.Instance
             ?? throw new Exception("Failed to create BooleanProp for " + ofeCaption);
         ofeProp.PropID = "_Cura_output_filament_extruding";
-        ofeProp.Hint = _localize.GetDescriptionTranslation(ofeProp.PropID, ofeCaption, "");
+        ofeProp.Hint = _localize.GetDescriptionTranslation(ofeProp.PropID, "Output filament extruding", "");
         if (_curaParameters.GlobalParams.TryGetValue(ofeProp.PropID, out param))
             param.ExistsInPropIterator = true;
         ofeProp.IsStructural = new BooleanValueGetter(() => true);
@@ -597,7 +594,7 @@ public class OperationProps : IDisposable
         var felProp = felPropCom.Instance
             ?? throw new Exception("Failed to create DoubleProp for " + felCaption);
         felProp.PropID = "_Cura_filament_extruding_length";
-        felProp.Hint = _localize.GetDescriptionTranslation(felProp.PropID, felCaption, "");
+        felProp.Hint = _localize.GetDescriptionTranslation(felProp.PropID, "Filament extruding length per frame", "");
         if (_curaParameters.GlobalParams.TryGetValue(felProp.PropID, out param))
             param.ExistsInPropIterator = true;
         felProp.IsStructural = new BooleanValueGetter(() => true);
@@ -616,6 +613,11 @@ public class OperationProps : IDisposable
             SaveFilamentExtrudingLengthToXml(OperationXmlProp);
         });
         simpleIterator.AddNewProp(felProp, parentIndex);
+
+        cldataModeProp.Visible = new BooleanValueGetter(() => AcceptedByFilter(cldataModeCaption)
+                                                        || atpProp.Visible.GetValue()
+                                                        || ofeProp.Visible.GetValue()
+                                                        || felProp.Visible.GetValue());
     }
 
     private void AddCustomParametersField(IST_SimplePropIterator simpleIterator)
@@ -629,7 +631,7 @@ public class OperationProps : IDisposable
         var scpProp = scpPropCom.Instance
                       ?? throw new Exception("Failed to create BooleanProp for " + scpCaption);
         scpProp.PropID = "_Cura_show_custom_parameters";
-        scpProp.Hint = _localize.GetDescriptionTranslation(scpProp.PropID, scpCaption, "");
+        scpProp.Hint = _localize.GetDescriptionTranslation(scpProp.PropID, "Show custom parameters", "");
         if (_curaParameters.GlobalParams.TryGetValue(scpProp.PropID, out var param))
             param.ExistsInPropIterator = true;
         scpProp.IsStructural = new BooleanValueGetter(() => true);
@@ -649,7 +651,7 @@ public class OperationProps : IDisposable
         var svProp = spPropCom.Instance
             ?? throw new Exception("Failed to create EnumWithIDProp for " + svCaption);
         svProp.PropID = "_Cura_setting_visibility";
-        svProp.Hint = _localize.GetDescriptionTranslation(svProp.PropID, svCaption, "");
+        svProp.Hint = _localize.GetDescriptionTranslation(svProp.PropID, "Setting visibility", "");
         if (_curaParameters.GlobalParams.TryGetValue(svProp.PropID, out param))
             param.ExistsInPropIterator = true;
         svProp.IsStructural = new BooleanValueGetter(() => true);
@@ -721,7 +723,7 @@ public class OperationProps : IDisposable
         var strengthProp = strengthPropCom.Instance
             ?? throw new Exception("Failed to create ComplexProp for " + strengthCaption);
         strengthProp.PropID = "_Cura_strength";
-        strengthProp.Hint = _localize.GetDescriptionTranslation(strengthProp.PropID, strengthCaption, "");
+        strengthProp.Hint = _localize.GetDescriptionTranslation(strengthProp.PropID, "Strength", "");
         strengthProp.IconFile = @"$(SUPPLEMENT_FOLDER)\operations\TypeImages\MeasuringItem.bmp";
         strengthProp.PropIsExpandedGetter = new BooleanValueGetter(() => _isStrengthPropsExpanded);
         strengthProp.PropIsExpandedSetter = new BooleanValueSetter(v => _isStrengthPropsExpanded = v);
@@ -765,7 +767,7 @@ public class OperationProps : IDisposable
         var supportProp = supportPropCom.Instance
             ?? throw new Exception("Failed to create ComplexProp for " + supportCaption);
         supportProp.PropID = "_Cura_support";
-        supportProp.Hint = _localize.GetDescriptionTranslation(supportProp.PropID, supportCaption, "");
+        supportProp.Hint = _localize.GetDescriptionTranslation(supportProp.PropID, "Support", "");
         supportProp.IconFile = @"$(SUPPLEMENT_FOLDER)\operations\TypeImages\MeasuringItem.bmp";
         supportProp.PropIsExpandedGetter = new BooleanValueGetter(() => _isSupportPropsExpanded);
         supportProp.PropIsExpandedSetter = new BooleanValueSetter(v => _isSupportPropsExpanded = v);
@@ -805,7 +807,7 @@ public class OperationProps : IDisposable
         var adhesion = adhesionCom.Instance
             ?? throw new Exception("Failed to create BooleanProp for " + propName);
         adhesion.PropID = "_Cura_Adhesion";
-        adhesion.Hint = _localize.GetDescriptionTranslation(strengthProp.PropID, strengthCaption, "");
+        adhesion.Hint = _localize.GetDescriptionTranslation(strengthProp.PropID, "Adhesion", "");
         adhesion.IsStructural = new BooleanValueGetter(() => true);
         adhesion.Visible = new BooleanValueGetter(() => AcceptedByFilter(propName) && IsParamVisible(param));
         adhesion.PropIsExpandedGetter = new BooleanValueGetter(() => _isAdhesionPropsExpanded);
