@@ -64,15 +64,24 @@ public class Parameter
     public string maximumValue;
     public string minimumValueWarning;
     public string maximumValueWarning;
-    public Parameter parent;
-    public List<Parameter> children;
+    public Parameter? parent;
+    public List<Parameter>? children;
     public bool HasMinimumValue;
     public bool HasMaximumValue;
     public bool HasMinimumValueWarning;
     public bool HasMaximumValueWarning;
     public int indProp; //save index from cfg settings to add to PropIterator
-    public bool IsGlobalParameter;
-    public bool IsVisibleInInspector = false;
+    
+    /// <summary>
+    /// Label or localized label contains filter string
+    /// </summary>
+    public bool IsAcceptedByFilter = true;
+    
+    /// <summary>
+    /// True, if parameter was added to PropIterator (doesn't matter if it's visible or not)
+    /// </summary>
+    public bool ExistsInPropIterator = false;
+    
     public bool IsExpanded = true;
     public void RestoreValue()
     {
@@ -117,25 +126,18 @@ public class Parameter
             return false;
         }
     }
+    
     public void AddChild(Parameter child)
     {
-        if (children==null)
-        {
-            children = new List<Parameter>();
-        }
+        children ??= [];
         children.Add(child);
     }
+    
     public bool HasChildren()
     {
-        if (children != null && children.Count>0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return children is { Count: > 0 };
     }
+    
     public string GetValueByType(ParameterValueType valueType)
     {
         switch (valueType)

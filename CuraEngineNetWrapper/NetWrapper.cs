@@ -11,7 +11,7 @@ public static class CuraEngineConnectionHelper
     private static IntPtr fCuraEngineConnectionNativeHandle = IntPtr.Zero;
     private static IntPtr fArcusNativeHandle = IntPtr.Zero;
     private static ICuraConnectionLibrary fNativeLib = null;
-    public static ICuraConnectionLibrary LoadNativeLib(string pathToCura)
+    public static ICuraConnectionLibrary? LoadNativeLib(string pathToCura)
     {
         fNativeLib = null;
         string assemblyLocation = Assembly.GetExecutingAssembly().Location;

@@ -4,9 +4,9 @@
 
 
  /* File created by MIDL compiler version 6.00.0366 */
-/* at Thu Aug 01 17:31:45 2024
+/* at Tue Oct 29 13:58:05 2024
  */
-/* Compiler settings
+/* Compiler settings for C:\repo\planar-slicing-extension\CuraConnectionInterface\main\CuraConnectionInterface.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 

@@ -101,7 +101,7 @@ msgctxt "Auto tool parameterization label"
 msgstr "Auto tool parameterization"
 
 msgctxt "Auto tool parameterization description"
-msgstr "Automatically adjusts Cura settings (Layer Height, Line Width) based on the corresponding tool parameters (Working Length, Diameter)."
+msgstr "Automatically adjusts tool parameters (Working Length, Diameter) based on the corresponding Cura settings (Layer Height, Line Width)."
 
 msgctxt "Toolpath parsing mode label"
 msgstr "Toolpath parsing mode"

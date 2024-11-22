@@ -7,21 +7,20 @@
 			<TypeName DefaultValue="TCuraEngineToolpathOp"/>
 		</SCType>
 	</SCNameSpace>
-    
 
-    <SCType ID="TCuraEngineToolpathOp" Caption="Planar slicing" type="TSTMillOp" Enabled = "True">
-        <GUID DefaultValue="{443DC844-5214-47F9-9C1F-08783A332C4B}"/>
-        <ContainerID DefaultValue="{E69F4DE4-0600-4369-8738-B3608AC7AB46}"/>
+
+	<SCType ID="TCuraEngineToolpathOp" Caption="Planar slicing" type="TSTMillExtensionOp" Enabled = "True">
+		<GUID DefaultValue="{443DC844-5214-47F9-9C1F-08783A332C4B}"/>
 		<SolverID DefaultValue="CuraEngineToolpath"/>
-
-        <Name DefaultValue="Planar slicing"/>
-        <Comment DefaultValue="Planar slicing"/>
-        <Icon DefaultValue="UltimakerCuraPlugin_icon.png"/>
-        <Image DefaultValue="$(SUPPLEMENT_FOLDER)\Operations\MillOperations\Images\PocketCladding.png"/>
+		<ContainerID DefaultValue="{E69F4DE4-0600-4369-8738-B3608AC7AB46}"/>
+		<Name DefaultValue="Planar slicing"/>
+		<Comment DefaultValue="Planar slicing"/>
+		<Icon DefaultValue="UltimakerCuraPlugin_icon.png"/>
+		<Image DefaultValue="$(SUPPLEMENT_FOLDER)\Operations\MillOperations\Images\PocketCladding.png"/>
 		<Group DefaultValue="Additive"/>
-        <MultiGroup>
-            <SCType ID="Additive" OrderInGroup="100" type="TLinkToParentMultiGroup"/>
-        </MultiGroup>
+		<MultiGroup>
+			<SCType ID="Additive" OrderInGroup="100" type="TLinkToParentMultiGroup"/>
+		</MultiGroup>
 		<OperationGroup DefaultValue="Additive"/>
 		<OperationConfiguration>
 			<Conf_Free DefaultValue="False"/>
@@ -54,7 +53,7 @@
 		<CheckedGeometry>
 			<CheckPartPlace Visible="False"/>
 			<CheckWorkpieceGroupPlaceHolder Visible="False"/>
-		</CheckedGeometry>	
+		</CheckedGeometry>
 		<Stock Visible="False"/>
 		<!-- 'Strategy' -->
 		<SCType ID="MFTabsInfo" Type="ComplexType" Enabled="False" ReadOnly="True">
@@ -63,19 +62,15 @@
 			</SCType>
 		</SCType>
 		<!-- 'Strategy' -->
-		<SCType ID="AxesBrakeUsingMode" Caption="Axes brakes using mode" type="Enumerated" DefaultValue="DoNotUse">
-			<SCType ID="DoNotUse" Caption="Do not use brakes" type="None"/>
-			<SCType ID="Always" Caption="Use brakes" type="None"/>
-		</SCType>
 		<SCType ID="CuraUserParameterArray" Caption="Array of user parameters"
-			Type="Array"
-			CollectionKeyField="Name"
-			CollectionValueField="Value"
-			Enabled="True">
+				Type="Array"
+				CollectionKeyField="Name"
+				CollectionValueField="Value"
+				Enabled="True">
 			<SCType ID="Parameter"  Caption="[Name]" Type="ComplexType">
 				<SCType ID="Name" Caption="Name" Type="String" DefaultValue=""/>
 				<SCType ID="Value" Caption="Value" Type="CDATAString" DefaultValue=""/>
-			</SCType>		
+			</SCType>
 		</SCType>
 		<SCType ID="GeneralParameters" Caption="General parameters" Type="ComplexType" Enabled="False" Visible="False">
 			<SCType ID="Manufacturer" Caption="Manufacturer" Type="CDATAString" DefaultValue=""/>
@@ -123,16 +118,16 @@
 		<Toolpath>
 			<Output>
 				<WorksOutput Visible="true" Caption="Output interpolation">
-					<AngularError DefaultValue="0.02"/>		
-					<LinearError Visible="not ([Mode]=[Mode.OldArcs])"/>	
-				</WorksOutput>			
-				<LinksOutput Visible="false"/>			
+					<AngularError DefaultValue="0.02"/>
+					<LinearError Visible="not ([Mode]=[Mode.OldArcs])"/>
+				</WorksOutput>
+				<LinksOutput Visible="false"/>
 			</Output>
 		</Toolpath>
 		<SCType ID="CuraPath" Caption="Set Cura path" type="ComplexType" Category="TPropertiesCategoryList.Misc" Priority="100"
-                                ImageFile="CuraPath_icon.png" Compact="true">
-				<SCType ID="SetPath" Caption="Set path" type="boolean" DefaultValue="False"/>
-				<SCType ID="Path" Caption="Path to CuraEngine.exe" type="FileName" DefaultValue="" Visible="[SetPath]" Filter="CuraEngine.exe (*.exe)|*.exe"/>
+				ImageFile="CuraPath_icon.png" Compact="true">
+			<SCType ID="SetPath" Caption="Set path" type="boolean" DefaultValue="False"/>
+			<SCType ID="Path" Caption="Path to CuraEngine.exe" type="FileName" DefaultValue="" Visible="[SetPath]" Filter="CuraEngine.exe (*.exe)|*.exe"/>
 		</SCType>
 	</SCType>
 </SCCollection>
