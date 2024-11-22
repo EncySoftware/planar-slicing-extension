@@ -13,9 +13,10 @@
 
   <ItemGroup>
     <Reference Include="$(OutDir)\CuraConnectionInterface.dll" />
-    <ProjectReference Include="..\CuraEngineNetWrapper\CuraEngineNetWrapper.csproj"/>
-    <ProjectReference Include="..\CuraEngineParametersLibrary\CuraEngineParametersLibrary.csproj"/>
+    <ProjectReference Include="..\CuraEngineNetWrapper\CuraEngineNetWrapper.csproj" />
+    <ProjectReference Include="..\CuraEngineParametersLibrary\CuraEngineParametersLibrary.csproj" />
 
-    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="1.2.1-dev.18" />
+    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="1.2.1-dev.26" /> 
+
   </ItemGroup>
 </Project>
