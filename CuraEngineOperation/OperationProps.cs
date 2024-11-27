@@ -23,16 +23,7 @@ public class OperationProps : IDisposable
     /// </summary>
     private readonly CuraLibraryPath _curaLibraryPath;
 
-    /// <summary>
-    /// Link to extension properties
-    /// </summary>
-    private readonly ComWrapper<IExtensionInfo>? _infoComWrapper;
-
-    /// <summary>
-    /// Link to extension properties
-    /// </summary>
-    private IExtensionInfo? Info => _infoComWrapper?.Instance;
-
+    private IExtensionInfo? Info;
     /// <summary>
     /// Properties of CuraEngine
     /// </summary>
@@ -43,6 +34,16 @@ public class OperationProps : IDisposable
     /// </summary>
     private string _searchFilter = "";
     
+    /// <summary>
+    /// Wrapper over additional iterator of operation properties. We need it to create dynamic properties
+    /// </summary>
+    private ComWrapper<IST_SimplePropIterator>? _additionalPropIteratorComWrapper;
+
+    /// <summary>
+    /// COM-object to iterate over operation properties
+    /// </summary>
+    private IST_SimplePropIterator? AdditionalPropIterator => _additionalPropIteratorComWrapper?.Instance;
+
     /// <summary>
     /// Wrapper over iterator of operation properties. We need it to create dynamic properties
     /// </summary>
@@ -102,21 +103,19 @@ public class OperationProps : IDisposable
         _curaLibraryPath = curaLibraryPath;
 
         // object to build dialog window
-        using var helpersCom = SystemExtensionFactory.GetSingletonExtension<IST_CustomPropHelpers>("Extension.CustomPropHelpers", info);
-        _propHelpersComWrapper ??= new ComWrapper<IST_CustomPropHelpers>(helpersCom.Instance);
+        _propHelpersComWrapper = SystemExtensionFactory.GetSingletonExtension<IST_CustomPropHelpers>("Extension.CustomPropHelpers", info);
         
-        using var xmlPropCom = new ComWrapper<IST_XMLPropPointer>(operation.XMLProp);
-        _operationXmlPropComWrapper = new ComWrapper<IST_XMLPropPointer>(xmlPropCom.Instance);
-        
-        _infoComWrapper ??= new ComWrapper<IExtensionInfo>(info);
+        _operationXmlPropComWrapper = new ComWrapper<IST_XMLPropPointer>(operation.XMLProp);
+        Info ??= info;
     }
 
     public void Dispose()
     {
         _propIteratorComWrapper?.Dispose();
+        _additionalPropIteratorComWrapper?.Dispose();
         _propHelpersComWrapper?.Dispose();
         _operationXmlPropComWrapper?.Dispose();
-        _infoComWrapper?.Dispose();
+        Info = null;
     }
     
     private ComWrapper<IExtensionManager> GetExtensionManager()
@@ -219,18 +218,15 @@ public class OperationProps : IDisposable
 
             using var dialogWindow = new CamApiInspectorWindow(extensionManager);
             dialogWindow.Caption = genParamsCaption;
-            var genPropIterator = Factory.CreateSimplePropIterator(extensionManager);
-            FillGeneralParameters(genPropIterator);
-            dialogWindow.SetPropIterator(genPropIterator);
             dialogWindow.SetPropIteratorGetter(new PropIteratorGetter(delegate()
             {
-                var spiWrapper =  new ComWrapper<IST_SimplePropIterator>(PropHelpers?.CreateSimplePropIterator());
-                var spi = spiWrapper?.Instance;
-                if (spi == null)
-                    throw new Exception("Failed to create SimplePropIterator for General parameters");   
-                FillGeneralParameters(spi);
-                spi.MoveToRoot();
-                return (IST_CustomPropIterator)spi;
+                _additionalPropIteratorComWrapper?.Dispose();
+                _additionalPropIteratorComWrapper = new ComWrapper<IST_SimplePropIterator>(PropHelpers?.CreateSimplePropIterator());
+                if (AdditionalPropIterator == null)
+                    throw new Exception("Failed to create SimplePropIterator");
+                FillGeneralParameters(AdditionalPropIterator);
+                AdditionalPropIterator.MoveToRoot();
+                return (IST_CustomPropIterator)AdditionalPropIterator;
             }));
 
             var buttons = TUIButtonTypeFlags.btfOk;
@@ -520,8 +516,7 @@ public class OperationProps : IDisposable
             return;
         
         var cldataModeCaption = _localize.GetLabelTranslation("Toolpath parsing mode");
-        using var cldataModePropCom = new ComWrapper<IST_CustomEnumWithIDPropHelper>(PropHelpers.CreateEnumWithIDProp(cldataModeCaption));
-        var cldataModeProp = cldataModePropCom.Instance
+        var cldataModeProp = PropHelpers.CreateEnumWithIDProp(cldataModeCaption)
             ?? throw new Exception("Failed to create EnumWithIDProp for " + cldataModeCaption);
         cldataModeProp.PropID = "_Cura_toolpath_parsing_mode";
         cldataModeProp.Hint = _localize.GetDescriptionTranslation(cldataModeProp.PropID, "Toolpath parsing mode", "");
@@ -552,12 +547,13 @@ public class OperationProps : IDisposable
         if (_curaParameters.GlobalParams.TryGetValue(atpProp.PropID, out param))
             param.ExistsInPropIterator = true;
         atpProp.IsStructural = new BooleanValueGetter(() => true);
-        atpProp.Visible = new BooleanValueGetter(delegate ()
+        var atpPropVisible = new BooleanValueGetter(delegate ()
         {
             _isOutputAdditionalClDataParametersVisible = AcceptedByFilter(atpCaption)
                                                         && Tpm == ToolpathParsingMode.tpmSimplified;
             return _isOutputAdditionalClDataParametersVisible;
         });
+        atpProp.Visible = atpPropVisible;
         atpProp.ValueGetter = new BooleanValueGetter(() => IsOutputAdditionalClDataParameters);
         atpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
         {
@@ -575,12 +571,13 @@ public class OperationProps : IDisposable
         if (_curaParameters.GlobalParams.TryGetValue(ofeProp.PropID, out param))
             param.ExistsInPropIterator = true;
         ofeProp.IsStructural = new BooleanValueGetter(() => true);
-        ofeProp.Visible = new BooleanValueGetter(delegate ()
+        var ofePropVisible = new BooleanValueGetter(delegate ()
         {
             _isOutputFilamentExtrudingVisible = AcceptedByFilter(ofeCaption)
                                                 && Tpm == ToolpathParsingMode.tpmGCodeBased;
             return _isOutputFilamentExtrudingVisible;
         });
+        ofeProp.Visible = ofePropVisible;
         ofeProp.ValueGetter = new BooleanValueGetter(() => IsOutputFilamentExtruding);
         ofeProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
         {
@@ -599,13 +596,14 @@ public class OperationProps : IDisposable
             param.ExistsInPropIterator = true;
         felProp.IsStructural = new BooleanValueGetter(() => true);
         felProp.UnitsStr = "mm";
-        felProp.Visible = new BooleanValueGetter(delegate
+        var felPropVisible = new BooleanValueGetter(delegate
         {
             _filamentExtrudingLengthVisible = AcceptedByFilter(felCaption)
                                              && Tpm == ToolpathParsingMode.tpmGCodeBased
                                              && IsOutputFilamentExtruding;
             return _filamentExtrudingLengthVisible;
         });
+        felProp.Visible = felPropVisible;
         felProp.ValueGetter = new DoubleValueGetter(() => FilamentExtrudingLength);
         felProp.ValueSetter = new DoubleValueSetter(delegate (double v)
         {
@@ -615,9 +613,9 @@ public class OperationProps : IDisposable
         simpleIterator.AddNewProp(felProp, parentIndex);
 
         cldataModeProp.Visible = new BooleanValueGetter(() => AcceptedByFilter(cldataModeCaption)
-                                                        || atpProp.Visible.GetValue()
-                                                        || ofeProp.Visible.GetValue()
-                                                        || felProp.Visible.GetValue());
+                                                        || atpPropVisible.GetValue()
+                                                        || ofePropVisible.GetValue()
+                                                        || felPropVisible.GetValue());
     }
 
     private void AddCustomParametersField(IST_SimplePropIterator simpleIterator)
@@ -635,8 +633,6 @@ public class OperationProps : IDisposable
         if (_curaParameters.GlobalParams.TryGetValue(scpProp.PropID, out var param))
             param.ExistsInPropIterator = true;
         scpProp.IsStructural = new BooleanValueGetter(() => true);
-        scpProp.Visible = new BooleanValueGetter(() =>
-            AcceptedByFilter(scpCaption) || _selectedSettingVisibilitiesVisible);
         scpProp.ValueGetter = new BooleanValueGetter(() => _curaParameters.IsShowCustomParameters);
         scpProp.ValueSetter = new BooleanValueSetter(delegate (bool v)
         {
@@ -655,11 +651,12 @@ public class OperationProps : IDisposable
         if (_curaParameters.GlobalParams.TryGetValue(svProp.PropID, out param))
             param.ExistsInPropIterator = true;
         svProp.IsStructural = new BooleanValueGetter(() => true);
-        svProp.Visible = new BooleanValueGetter(delegate
+        var svPropVisible = new BooleanValueGetter(delegate
         {
             _selectedSettingVisibilitiesVisible = AcceptedByFilter(svCaption) && _curaParameters.IsShowCustomParameters;
             return _selectedSettingVisibilitiesVisible;
         });
+        svProp.Visible = svPropVisible;
         foreach (var sv in _curaParameters.SettingVisibilities)
         {
             var svName = _localize.GetEnumsTranslation("_setting_visibility", "Setting visibility", sv, sv);
@@ -672,7 +669,8 @@ public class OperationProps : IDisposable
             _curaParameters.SelectedSettingVisibilities = v;
             SaveSettingVisibilityToXml(OperationXmlProp);
         });
-        
+        scpProp.Visible = new BooleanValueGetter(() =>
+            AcceptedByFilter(scpCaption) || svPropVisible.GetValue());
         simpleIterator.AddNewProp(svProp, parentInd);
     }
     
@@ -801,7 +799,7 @@ public class OperationProps : IDisposable
         // adhesion
         if (!_curaParameters.GlobalParams.TryGetValue("adhesion_type", out param))
             return;
-        
+        param.ExistsInPropIterator = true;
         var propName = _localize.GetLabelTranslation("Adhesion");
         using var adhesionCom = new ComWrapper<IST_CustomBooleanPropHelper>(PropHelpers.CreateBooleanProp(propName));
         var adhesion = adhesionCom.Instance
@@ -839,8 +837,7 @@ public class OperationProps : IDisposable
         if (PropHelpers == null)
             throw new Exception("PropHelpers is null");
         var label = _localize.GetLabelTranslation(param.id, param.label);
-        using var stringPropCom = new ComWrapper<IST_CustomStringPropHelper>(PropHelpers.CreateStringProp(label));
-        var stringProp = stringPropCom.Instance
+        var stringProp = PropHelpers.CreateStringProp(label)
             ?? throw new Exception("Failed to create StringProp for " + label);
         if (param.icon != null && param.icon != "")
             stringProp.IconFile = _curaParameters.CuraPath + @"share\cura\resources\themes\cura-light\icons\default\" + param.icon + ".svg";
@@ -885,8 +882,7 @@ public class OperationProps : IDisposable
         if (PropHelpers == null)
             throw new Exception("PropHelpers is null");
         var label = _localize.GetLabelTranslation(param.id, param.label);
-        using var integerPropCom = new ComWrapper<IST_CustomIntegerPropHelper>(PropHelpers.CreateIntegerProp(label));
-        var integerProp = integerPropCom.Instance
+        var integerProp = PropHelpers.CreateIntegerProp(label)
             ?? throw new Exception("Failed to create IntegerProp for " + label);
         if (param.icon != null && param.icon != "")
             integerProp.IconFile = _curaParameters.CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
@@ -930,8 +926,7 @@ public class OperationProps : IDisposable
         if (PropHelpers == null)
             throw new Exception("PropHelpers is null");
         var label = _localize.GetLabelTranslation(param.id, param.label);
-        using var floatPropCom = new ComWrapper<IST_CustomDoublePropHelper>(PropHelpers.CreateDoubleProp(label));
-        var floatProp = floatPropCom.Instance
+        var floatProp = PropHelpers.CreateDoubleProp(label)
             ?? throw new Exception("Failed to create DoubleProp for " + label);
         if (param.icon != null && param.icon != "")
             floatProp.IconFile = _curaParameters.CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
@@ -980,8 +975,7 @@ public class OperationProps : IDisposable
         if (PropHelpers == null)
             throw new Exception("PropHelpers is null");
         var label = _localize.GetLabelTranslation(param.id, param.label);
-        using var boolPropCom = new ComWrapper<IST_CustomBooleanPropHelper>(PropHelpers.CreateBooleanProp(label));
-        var boolProp = boolPropCom.Instance
+        var boolProp = PropHelpers.CreateBooleanProp(label)
             ?? throw new Exception("Failed to create BooleanProp for " + label);
         if (param.icon != null && param.icon != "")
             boolProp.IconFile = _curaParameters.CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
@@ -1025,8 +1019,7 @@ public class OperationProps : IDisposable
         if (PropHelpers == null)
             throw new Exception("PropHelpers is null");
         var label = _localize.GetLabelTranslation(param.id, param.label);
-        using var enumPropCom = new ComWrapper<IST_CustomEnumWithIDPropHelper>(PropHelpers.CreateEnumWithIDProp(label));
-        var enumProp = enumPropCom.Instance
+        var enumProp = PropHelpers.CreateEnumWithIDProp(label)
             ?? throw new Exception("Failed to create EnumWithIDProp for " + label);
         if (param.icon != null && param.icon != "")
             enumProp.IconFile = _curaParameters.CuraPath + "share\\cura\\resources\\themes\\cura-light\\icons\\default\\" + param.icon + ".svg";
@@ -1066,8 +1059,7 @@ public class OperationProps : IDisposable
         if (PropHelpers == null)
             throw new Exception("PropHelpers is null");
         var label = _localize.GetLabelTranslation(param.id, param.label);
-        using var complexPropCom = new ComWrapper<IST_CustomComplexPropHelper>(PropHelpers.CreateComplexProp(label));
-        var complexProp = complexPropCom.Instance
+        var complexProp = PropHelpers.CreateComplexProp(label)
             ?? throw new Exception("Failed to create ComplexProp for " + label);
         if (param.icon != null && param.icon != "")
             complexProp.IconFile = "$(SUPPLEMENT_FOLDER)\\operations\\TypeImages\\MeasuringItem.bmp";
@@ -1240,118 +1232,97 @@ public class OperationProps : IDisposable
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var manufacturerCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.Manufacturer"]); 
-        var manufacturer = manufacturerCom.Instance;
-        if (manufacturer!=null && _curaParameters.SelectedMachineBrand != null)
-            manufacturer.ValueAsString = _curaParameters.SelectedMachineBrand.name;  
+        if (xmlProp.Str["GeneralParameters.Manufacturer"] != null &&_curaParameters.SelectedMachineBrand != null)
+            xmlProp.Str["GeneralParameters.Manufacturer"] = _curaParameters.SelectedMachineBrand.name;  
         else
-            manufacturer.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.Manufacturer"] = "";
     }
   
     public void SaveMachineToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var machineCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.Machine"]);
-        var machine = machineCom.Instance;
-        if (machine!=null && _curaParameters.SelectedMachine != null)
-            machine.ValueAsString = _curaParameters.SelectedMachine.id;  
+        if (xmlProp.Str["GeneralParameters.Machine"] != null && _curaParameters.SelectedMachine != null)
+            xmlProp.Str["GeneralParameters.Machine"] = _curaParameters.SelectedMachine.id;  
         else
-            machine.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.Machine"] = "";
     }
 
     public void SaveExtruderToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var extruderCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.Extruder"]);
-        var extruder = extruderCom.Instance;
-        if (extruder!=null && _curaParameters.SelectedExtruder != null)
-            extruder.ValueAsString = _curaParameters.SelectedExtruder.id; 
+        if (xmlProp.Str["GeneralParameters.Extruder"] != null &&_curaParameters.SelectedExtruder != null)
+            xmlProp.Str["GeneralParameters.Extruder"] = _curaParameters.SelectedExtruder.id; 
         else
-            extruder.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.Extruder"] = "";
     }
 
     public void SaveMaterialBrandToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var materialBrandCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.MaterialBrand"]);
-        var materialBrand = materialBrandCom.Instance;
-        if (materialBrand!=null && _curaParameters.SelectedMaterialBrand != null)
-            materialBrand.ValueAsString = _curaParameters.SelectedMaterialBrand.name;    
+        if (xmlProp.Str["GeneralParameters.MaterialBrand"] != null &&_curaParameters.SelectedMaterialBrand != null)
+            xmlProp.Str["GeneralParameters.MaterialBrand"] = _curaParameters.SelectedMaterialBrand.name;    
         else
-            materialBrand.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.MaterialBrand"] = "";
     }
 
     public void SaveMaterialToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var materialCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.Material"]);
-        var material = materialCom.Instance;
-        if (material!=null && _curaParameters.SelectedMaterial != null)
-            material.ValueAsString = _curaParameters.SelectedMaterial.id;    
+        if (xmlProp.Str["GeneralParameters.Material"] != null &&_curaParameters.SelectedMaterial != null)
+            xmlProp.Str["GeneralParameters.Material"] = _curaParameters.SelectedMaterial.id;    
         else
-            material.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.Material"] = "";
     }
 
     public void SaveVariantToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var variantCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.Variant"]);
-        var variant = variantCom.Instance;
-        if (variant!=null && _curaParameters.SelectedVariant != null)
-            variant.ValueAsString = _curaParameters.SelectedVariant.Name; 
+        if (xmlProp.Str["GeneralParameters.Variant"] != null && _curaParameters.SelectedVariant != null)
+            xmlProp.Str["GeneralParameters.Variant"] = _curaParameters.SelectedVariant.Name; 
         else
-            variant.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.Variant"] = "";
     }
 
     public void SaveProfileToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var intentCategoryCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.Profile"]);
-        var intentCategory = intentCategoryCom.Instance;
-        if (intentCategory!=null && _curaParameters.SelectedIntentCategory != null)
-            intentCategory.ValueAsString = _curaParameters.SelectedIntentCategory.IntentCategoryName;
+        if (xmlProp.Str["GeneralParameters.Profile"] != null && _curaParameters.SelectedIntentCategory != null)
+            xmlProp.Str["GeneralParameters.Profile"] = _curaParameters.SelectedIntentCategory.IntentCategoryName;
         else    
-            intentCategory.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.Profile"] = "";
     }
 
     public void SaveQualityToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var resolutionCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.Quality"]);
-        var resolution = resolutionCom.Instance;
-        if (resolution!=null && _curaParameters.SelectedQuality != null)
-            resolution.ValueAsString = _curaParameters.SelectedQuality.FileName;
+        if (xmlProp.Str["GeneralParameters.Quality"] != null && _curaParameters.SelectedQuality != null)
+            xmlProp.Str["GeneralParameters.Quality"] = _curaParameters.SelectedQuality.FileName;
         else    
-            resolution.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.Quality"] = "";
     }
 
     public void SaveShowCustomParametersToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var showCustomParametersCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.ShowCustomParameters"]);
-        var showCustomParameters = showCustomParametersCom.Instance;
-        if (showCustomParameters != null)
-            showCustomParameters.ValueAsBoolean = _curaParameters.IsShowCustomParameters;
+        xmlProp.Bol["GeneralParameters.ShowCustomParameters"] = _curaParameters.IsShowCustomParameters;
     }
 
     public void SaveSettingVisibilityToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var settingVisibilityCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.SettingVisibility"]); 
-        var settingVisibility = settingVisibilityCom.Instance;
-        if (settingVisibility!=null && _curaParameters.SelectedSettingVisibilities!="")
-            settingVisibility.ValueAsString = _curaParameters.SelectedSettingVisibilities;
+        if (xmlProp.Str["GeneralParameters.SettingVisibility"] != null && _curaParameters.SelectedSettingVisibilities!="")
+            xmlProp.Str["GeneralParameters.SettingVisibility"] = _curaParameters.SelectedSettingVisibilities;
         else    
-            settingVisibility.ValueAsString = "";
+            xmlProp.Str["GeneralParameters.SettingVisibility"] = "";
     }
 
     public void SaveAutoToolParameterizationToXml(IST_XMLPropPointer xmlProp)
@@ -1359,10 +1330,7 @@ public class OperationProps : IDisposable
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
       
-        using var autoToolParameterizationCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.AutoToolParameterization"]); 
-        var autoToolParameterization = autoToolParameterizationCom.Instance;
-        if (autoToolParameterization != null)
-            autoToolParameterization.ValueAsBoolean = IsAutoToolParameterization;
+        xmlProp.Bol["GeneralParameters.AutoToolParameterization"] = IsAutoToolParameterization;
         if (!_isOperationCreating || !IsAutoToolParameterization)
             return;
         _isOperationCreating = false;
@@ -1375,10 +1343,7 @@ public class OperationProps : IDisposable
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
       
-        using var felCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.FilamentExtrudingLength"]); 
-        var fel = felCom.Instance;
-        if (fel != null)
-            fel.ValueAsDouble = FilamentExtrudingLength;
+        xmlProp.Flt["GeneralParameters.FilamentExtrudingLength"] = FilamentExtrudingLength;
     }
 
     public void SaveOutputAdditionalParametersToXml(IST_XMLPropPointer xmlProp)
@@ -1386,20 +1351,14 @@ public class OperationProps : IDisposable
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
       
-        using var outputAdditionalParametersCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.OutputAdditionalParameters"]); 
-        var outputAdditionalParameters = outputAdditionalParametersCom.Instance;
-        if (outputAdditionalParameters != null)
-            outputAdditionalParameters.ValueAsBoolean = IsOutputAdditionalClDataParameters;
+        xmlProp.Bol["GeneralParameters.OutputAdditionalParameters"] = IsOutputAdditionalClDataParameters;
     }
 
     public void SaveOutputFilamentExtrudingToXml(IST_XMLPropPointer xmlProp)
     {
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
-        using var outputFilamentExtrudingCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.OutputFilamentExtruding"]); 
-        var outputFilamentExtruding = outputFilamentExtrudingCom.Instance;
-        if (outputFilamentExtruding != null)
-            outputFilamentExtruding.ValueAsBoolean = IsOutputFilamentExtruding;
+        xmlProp.Bol["GeneralParameters.OutputFilamentExtruding"] = IsOutputFilamentExtruding;
     }
 
     public void SaveToolpathParsingModeToXml(IST_XMLPropPointer xmlProp)
@@ -1407,10 +1366,7 @@ public class OperationProps : IDisposable
         if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
             return;
   
-        using var tpModeCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.ToolpathParsingMode"]);
-        var tpMode = tpModeCom.Instance;
-        if (tpMode == null)
-            return;
-        tpMode.ValueAsString = Tpm == ToolpathParsingMode.tpmSimplified ? "Simplified" : "GCodeBased";
+         if (xmlProp.Str["GeneralParameters.ToolpathParsingMode"] == null)
+            xmlProp.Str["GeneralParameters.ToolpathParsingMode"] = Tpm == ToolpathParsingMode.tpmSimplified ? "Simplified" : "GCodeBased";
     }
 }

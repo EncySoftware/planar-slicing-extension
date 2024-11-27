@@ -59,6 +59,28 @@
             ],
             "problemMatcher": "$msCompile"
         },
+        {
+            "group": "build",
+            "label": "clean all (Release)",
+            "command": "${workspaceFolder}/.stbuild/build.cmd",
+            "type": "process",
+            "args": [
+                "--target", "clean",
+                "-variant", "Release_x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "group": "build",
+            "label": "clean all (Debug)",
+            "command": "${workspaceFolder}/.stbuild/build.cmd",
+            "type": "process",
+            "args": [
+                "--target", "clean",
+                "-variant", "Debug_x64"
+            ],
+            "problemMatcher": "$msCompile"
+        },
 		{
 			"group": "build",
             "label": "build CuraEngineOperation",

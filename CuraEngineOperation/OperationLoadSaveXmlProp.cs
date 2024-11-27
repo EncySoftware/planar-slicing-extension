@@ -1,4 +1,5 @@
-﻿using CAMAPI.DotnetHelper;
+﻿using System.Runtime.InteropServices;
+using CAMAPI.DotnetHelper;
 using CAMAPI.EventHandler;
 using CAMAPI.TechOperation;
 using STXMLPropTypes;
@@ -19,7 +20,10 @@ public class OperationLoadSaveXmlProp : ICamApiEventHandler,
         _operationProps = operationProps;
         _curaLibraryPath = curaLibraryPath;
     }
-    
+    ~OperationLoadSaveXmlProp()
+    {
+
+    }
     /// <summary>
     /// We always return false, because only one event is supported
     /// </summary>
@@ -30,23 +34,22 @@ public class OperationLoadSaveXmlProp : ICamApiEventHandler,
     
     public void LoadFromXmlProp(IST_XMLPropPointer xmlProp)
     {
-        if (_curaParamsReceiver == null)
-            throw new Exception("_curaParamsReceiver is null");
-        if (_operationProps == null)
-            throw new Exception("_operationProps is null");
-        if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
-            return;
-        
         using var xmlPropCom = new ComWrapper<IST_XMLPropPointer>(xmlProp);
         var xmlPropObj = xmlPropCom.Instance;
         if (xmlPropObj == null)
             return;
+
+        if (_curaParamsReceiver == null)
+            throw new Exception("_curaParamsReceiver is null");
+        if (_operationProps == null)
+            throw new Exception("_operationProps is null");
+
+        if (!_curaLibraryPath.CheckLibraryExists(xmlPropCom.Instance))
+            return;
+
+        _curaLibraryPath.UserPathEnabled = xmlPropObj.Bol["CuraPath.SetPath"];
         
-        using var xmlPropCuraPathSetPathCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["CuraPath.SetPath"]);
-        _curaLibraryPath.UserPathEnabled = xmlPropCuraPathSetPathCom.Instance?.ValueAsBoolean ?? false;
-        
-        using var xmlPropCuraPathPathCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["CuraPath.Path"]);
-        _curaLibraryPath.UserCuraPath = xmlPropCuraPathPathCom.Instance?.ValueAsString ?? "";
+        _curaLibraryPath.UserCuraPath = xmlPropObj.Str["CuraPath.Path"];
         
         using var xmlPropCuraUserParameterArrayCom = new ComWrapper<IST_XMLPropArray>(xmlPropObj.Arr["CuraUserParameterArray"]);
         var curaUserParameterArray = xmlPropCuraUserParameterArrayCom.Instance;
@@ -65,80 +68,57 @@ public class OperationLoadSaveXmlProp : ICamApiEventHandler,
         else    
             LoadAdhesionValueFromXml(xmlPropObj);
 
-        using var manufacturerCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.Manufacturer"]);
-        var manufacturer = manufacturerCom.Instance; 
-        if (manufacturer is { ValueAsString: not null } && manufacturer.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SetSelectedMachineBrand(manufacturer.ValueAsString);
+        var manufacturer = xmlPropObj.Str["GeneralParameters.Manufacturer"]; 
+        if (manufacturer != null && manufacturer != "")
+            _curaParamsReceiver.CEParameters.SetSelectedMachineBrand(manufacturer);
   
-        using var machineCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.Machine"]);
-        var machine = machineCom.Instance;
-        if (machine is { ValueAsString: not null } && machine.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SetSelectedMachine(machine.ValueAsString);
+        var machine = xmlPropObj.Str["GeneralParameters.Machine"];
+        if (machine != null && machine != "")
+            _curaParamsReceiver.CEParameters.SetSelectedMachine(machine);
   
-        using var extruderCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.Extruder"]);
-        var extruder = extruderCom.Instance;
-        if (extruder is { ValueAsString: not null } && extruder.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SetSelectedExtruder(extruder.ValueAsString);
+        var extruder = xmlPropObj.Str["GeneralParameters.Extruder"];
+        if (extruder != null && extruder != "")
+            _curaParamsReceiver.CEParameters.SetSelectedExtruder(extruder);
   
-        using var materialBrandCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.MaterialBrand"]);
-        var materialBrand = materialBrandCom.Instance;
-        if (materialBrand is { ValueAsString: not null } && materialBrand.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SetSelectedMaterialBrand(materialBrand.ValueAsString);
+        var materialBrand = xmlPropObj.Str["GeneralParameters.MaterialBrand"];
+        if (materialBrand != null && materialBrand != "")
+            _curaParamsReceiver.CEParameters.SetSelectedMaterialBrand(materialBrand);
   
-        using var materialCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.Material"]);
-        var material = materialCom.Instance;
-        if (material is { ValueAsString: not null } && material.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SetSelectedMaterial(material.ValueAsString);
+        var material = xmlPropObj.Str["GeneralParameters.Material"];
+        if (material != null && material != "")
+            _curaParamsReceiver.CEParameters.SetSelectedMaterial(material);
   
-        using var variantCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.Variant"]);
-        var variant = variantCom.Instance;
-        if (variant is { ValueAsString: not null } && variant.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SetSelectedVariant(variant.ValueAsString);
+        var variant = xmlPropObj.Str["GeneralParameters.Variant"];
+        if (variant != null && variant != "")
+            _curaParamsReceiver.CEParameters.SetSelectedVariant(variant);
 
-        using var profileCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.Profile"]);
-        var profile = profileCom.Instance;
-        if (profile is { ValueAsString: not null } && profile.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SetSelectedIntentCategory(profile.ValueAsString);
+        var profile = xmlPropObj.Str["GeneralParameters.Profile"];
+        if (profile != null && profile != "")
+            _curaParamsReceiver.CEParameters.SetSelectedIntentCategory(profile);
   
-        using var qualityCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.Quality"]);
-        var quality = qualityCom.Instance;
-        if (quality is { ValueAsString: not null } && quality.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SetSelectedQuality(quality.ValueAsString);
+        var quality = xmlPropObj.Str["GeneralParameters.Quality"];
+        if (quality != null && quality != "")
+            _curaParamsReceiver.CEParameters.SetSelectedQuality(quality);
   
-        using var showCustomParametersCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.ShowCustomParameters"]);
-        var showCustomParameters = showCustomParametersCom.Instance;
-        if (showCustomParameters != null)
-            _curaParamsReceiver.CEParameters.IsShowCustomParameters = showCustomParameters.ValueAsBoolean;
+        _curaParamsReceiver.CEParameters.IsShowCustomParameters = xmlPropObj.Bol["GeneralParameters.ShowCustomParameters"];
   
-        using var settingVisibilityCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.SettingVisibility"]);
-        var settingVisibility = settingVisibilityCom.Instance;
-        if (settingVisibility is { ValueAsString: not null } && settingVisibility.ValueAsString != "")
-            _curaParamsReceiver.CEParameters.SelectedSettingVisibilities = settingVisibility.ValueAsString;
+        var settingVisibility = xmlPropObj.Str["GeneralParameters.SettingVisibility"];
+        if (settingVisibility != null && settingVisibility != "")
+            _curaParamsReceiver.CEParameters.SelectedSettingVisibilities = settingVisibility;
 
-        using var autoToolParameterizationCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.AutoToolParameterization"]);
-        var autoToolParameterization = autoToolParameterizationCom.Instance;
-        if (autoToolParameterization != null)
-            _operationProps.IsAutoToolParameterization = autoToolParameterization.ValueAsBoolean;
+        _operationProps.IsAutoToolParameterization = xmlPropObj.Bol["GeneralParameters.AutoToolParameterization"];
   
-        using var tpModeCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.ToolpathParsingMode"]);
-        var tpMode = tpModeCom.Instance;
+        var tpMode = xmlPropObj.Str["GeneralParameters.ToolpathParsingMode"];
         if (tpMode != null)
-            _operationProps.Tpm = tpMode.ValueAsString=="Simplified" ? ToolpathParsingMode.tpmSimplified : ToolpathParsingMode.tpmGCodeBased;
+            _operationProps.Tpm = tpMode=="Simplified" ? ToolpathParsingMode.tpmSimplified : ToolpathParsingMode.tpmGCodeBased;
   
-        using var outputAdditionalParametersCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.OutputAdditionalParameters"]);
-        var outputAdditionalParameters = outputAdditionalParametersCom.Instance;
-        if (outputAdditionalParameters != null)
-            _operationProps.IsOutputAdditionalClDataParameters = outputAdditionalParameters.ValueAsBoolean;
+        _operationProps.IsOutputAdditionalClDataParameters = xmlPropObj.Bol["GeneralParameters.OutputAdditionalParameters"];
 
-        using var outputFilamentExtrudingCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.OutputFilamentExtruding"]);
-        var outputFilamentExtruding = outputFilamentExtrudingCom.Instance;
-        if (outputFilamentExtruding != null)
-            _operationProps.IsOutputFilamentExtruding = outputFilamentExtruding.ValueAsBoolean;
+        _operationProps.IsOutputFilamentExtruding = xmlPropObj.Bol["GeneralParameters.OutputFilamentExtruding"];
   
-        using var felCom = new ComWrapper<IST_XMLPropPointer>(xmlPropObj.Ptr["GeneralParameters.FilamentExtrudingLength"]);
-        var fel = felCom.Instance;
-        if (fel != null)
-            _operationProps.FilamentExtrudingLength = fel.ValueAsDouble;
+         var fel = xmlPropObj.Flt["GeneralParameters.FilamentExtrudingLength"];
+         if (fel != null)
+            _operationProps.FilamentExtrudingLength = fel;
   
         _curaParamsReceiver.CEParameters.UpdateAllParameters();
     }
@@ -147,12 +127,8 @@ public class OperationLoadSaveXmlProp : ICamApiEventHandler,
     {
         if (_curaParamsReceiver == null)
             throw new Exception("_curaParamsReceiver is null");
-        using var adhesionCom = new ComWrapper<IST_XMLPropPointer>(xmlProp.Ptr["GeneralParameters.Adhesion"]);
-        var adhesion = adhesionCom.Instance;
-        if (adhesion == null)
-            return;
         
-        var value = adhesion.ValueAsBoolean;
+        var value = xmlProp.Bol["GeneralParameters.Adhesion"];
         if (value)
             return;
         
@@ -184,7 +160,7 @@ public class OperationLoadSaveXmlProp : ICamApiEventHandler,
         _operationProps.SaveOutputAdditionalParametersToXml(xmlPropObj);
         _operationProps.SaveOutputFilamentExtrudingToXml(xmlPropObj);
         _operationProps.SaveFilamentExtrudingLengthToXml(xmlPropObj);
-        xmlPropObj.Ptr["CuraPath.SetPath"].ValueAsBoolean = _curaLibraryPath.UserPathEnabled;
-        xmlPropObj.Ptr["CuraPath.Path"].ValueAsString = _curaLibraryPath.CuraPath;
+        xmlPropObj.Bol["CuraPath.SetPath"] = _curaLibraryPath.UserPathEnabled;
+        xmlPropObj.Str["CuraPath.Path"] = _curaLibraryPath.CuraPath;
     }
 }

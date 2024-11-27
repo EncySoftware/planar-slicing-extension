@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutDir>../../CuraEngineConnection/build/$(Configuration)</OutDir>
@@ -15,6 +15,8 @@
     <Reference Include="$(OutDir)\CuraConnectionInterface.dll" />
     <Reference Include="$(OutDir)\CuraEngineParametersLibrary.dll" />
     <Reference Include="$(OutDir)\CuraEngineNetWrapper.dll" />
+
+    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="1.2.1-rc.9" /> 
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NCalcSync" Version="3.12.0" />

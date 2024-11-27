@@ -89,10 +89,6 @@ public class CuraEngineOperationSolver :
             if (operation == null)
                 throw new Exception("Operation is null");
             
-            using var xmlPropCom = new ComWrapper<IST_XMLPropPointer>(operation.XMLProp);
-            var xmlProp = xmlPropCom.Instance
-                ?? throw new Exception("XMLProp is null");
-            
             // cura engine parameters
             _curaParamsReceiver = new ParamsReceiver();
             
@@ -108,8 +104,10 @@ public class CuraEngineOperationSolver :
             var userLangPath = Path.Combine(Path.GetDirectoryName(assemblyLocation) ?? "", "UserLocalization");
             _localization.ReadUserTranslations(userLangPath);  
 
-            _curaLibraryPath = new CuraLibraryPath(operation.XMLProp);
-            if (!_curaLibraryPath.CheckLibraryExists(xmlProp))
+            using var xmlPropCom = new ComWrapper<IST_XMLPropPointer>(operation.XMLProp);
+
+             _curaLibraryPath = new CuraLibraryPath(xmlPropCom.Instance);
+            if (!_curaLibraryPath.CheckLibraryExists(xmlPropCom.Instance))
             {
                 _curaControlProcess.Logger.Warning(_warningMessage);
                 ShowMessageBox(_warningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
@@ -118,6 +116,7 @@ public class CuraEngineOperationSolver :
             {
                 InitConfigurations(ref resultStatus);
             }
+
         } catch (Exception e)
         {
             resultStatus.Code = TResultStatusCode.rsError;
@@ -157,14 +156,11 @@ public class CuraEngineOperationSolver :
     }
     private int ShowMessageBox(string Msg, TMessageDialogType DlgType, ushort Buttons, TUIButtonType DefaultButton, string ATitle)
     {
-        using var box = SystemExtensionFactory.GetSingletonExtension<ICAMAPI_UIDialogsHelper>("Extension.UIDialogs.Core", Info);
-
-
-        // var extension = Info.InstanceInfo.ExtensionManager.GetSingletonExtension("Extension.UIDialogs.Core", out TResultStatus ret);
-        // var uiDialog = (ICAMAPI_UIDialogsHelper)extension;
+        var box = SystemExtensionFactory.GetSingletonExtension<ICAMAPI_UIDialogsHelper>("Extension.UIDialogs.Core", Info);
         ushort buttons = (ushort)TUIButtonTypeFlags.btfOk;
         return box.Instance.MessageBox(Msg, DlgType, buttons, DefaultButton, ATitle);
     }
+    
     /// <summary>
     /// Nothing to do
     /// </summary>
@@ -172,10 +168,12 @@ public class CuraEngineOperationSolver :
     {
         Operation?.UnregisterHandler(HandlerIdentInitModelFormers, out _);
         Operation?.UnregisterHandler(HandlerIdentLoadSaveXml, out _);
+        _operationEventHandlerLoadSaveXml = null;
+        _operationEventHandlerInitModelFormers = null;
         Marshal.FinalReleaseComObject(_operationComWrapper?.Instance);
-        _operationComWrapper?.Dispose();
         _curaControlProcess?.Dispose();
         _operationProps?.Dispose();
+        _operationComWrapper?.Dispose();  
     }
     
     public bool GetPropIterator(string pageId,
@@ -190,7 +188,8 @@ public class CuraEngineOperationSolver :
             var operation = _operationComWrapper.Instance;
             if (operation != null)
             {
-                if (!_curaLibraryPath.CheckLibraryExists(operation.XMLProp))
+                using var xmlPropCom = new ComWrapper<IST_XMLPropPointer>(operation.XMLProp);
+                if (!_curaLibraryPath.CheckLibraryExists(xmlPropCom.Instance))
                 {
                     _curaControlProcess.Logger.Warning(_warningMessage);
                     ShowMessageBox(_warningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
@@ -263,11 +262,15 @@ public class CuraEngineOperationSolver :
             throw new Exception("_curaParamsReceiver is null");
         
         var curaPath = _curaParamsReceiver.CEParameters.CuraPath;
-        var lib = CuraEngineConnectionHelper.LoadNativeLib(curaPath);
+        using var lib = CuraEngineConnectionHelper.LoadNativeLib(curaPath);
         if (lib == null)
             return;
         
-        FillPoints(techOperation, lib.TrianglesReciever);
+        using var tr = new ComWrapper<ITrianglesReciever>(lib.Instance.TrianglesReciever);
+        if (tr==null)
+            return;
+
+        FillPoints(techOperation, tr);
         _curaParamsReceiver.CEParameters.ParseAllParameters();
         _curaControlProcess.clf = cldReceiver;
         _curaControlProcess.OnGCodeCommandTranslation = _operationProps.GetGCodeCommandTranslation;
@@ -276,18 +279,18 @@ public class CuraEngineOperationSolver :
         _curaControlProcess.tpm = _operationProps.Tpm;
         _curaControlProcess.FilamentExtrudingLength = _operationProps.FilamentExtrudingLength;
         
-        lib.Slice(_curaControlProcess, _curaParamsReceiver, curaPath);
+        lib.Instance.Slice(_curaControlProcess, _curaParamsReceiver, curaPath);
     }
  
-    private void FillPoints(ICamApiTechOperation techOperation, ITrianglesReciever r)
+    private void FillPoints(ICamApiTechOperation techOperation, ComWrapper<ITrianglesReciever> r)
     {
         if (_curaControlProcess == null)
             throw new Exception("_curaControlProcess is null");
         
-        r.BeginTransfer();
+        r.Instance.BeginTransfer();
         try
         {
-            r.BeginModel();
+            r.Instance.BeginModel();
             try
             {
                 var tolerance = GetRealTolerance(techOperation);
@@ -327,16 +330,16 @@ public class CuraEngineOperationSolver :
             }
             finally
             {
-                r.EndModel();
+                r.Instance.EndModel();
             }   
         }
         finally
         {
-            r.EndTransfer();
+            r.Instance.EndTransfer();
         }  
     }
 
-    private void FillTriangles(ITrianglesReciever r, ICamApiFaceList faceList, double tolerance)
+    private void FillTriangles(ComWrapper<ITrianglesReciever> r, ICamApiFaceList faceList, double tolerance)
     {
         // calc total count of triangles
         var totalTriangleCount = 0;  
@@ -347,7 +350,7 @@ public class CuraEngineOperationSolver :
         }    
               
         // add triangles
-        r.BeginMesh("Mesh", totalTriangleCount);
+        r.Instance.BeginMesh("Mesh", totalTriangleCount);
         try
         {
             for (var i = 0; i < faceList.Count; i++)
@@ -359,13 +362,13 @@ public class CuraEngineOperationSolver :
                     var xInd = mesh.GetTriangle(j).X;
                     var yInd = mesh.GetTriangle(j).Y;
                     var zInd = mesh.GetTriangle(j).Z;                            
-                    r.AddTriangle(P3S(mesh.GetVertex(xInd)), P3S(mesh.GetVertex(yInd)), P3S(mesh.GetVertex(zInd)));
+                    r.Instance.AddTriangle(P3S(mesh.GetVertex(xInd)), P3S(mesh.GetVertex(yInd)), P3S(mesh.GetVertex(zInd)));
                 }
             }  
         }
         finally
         {
-            r.EndMesh();
+            r.Instance.EndMesh();
         }  
     }
   

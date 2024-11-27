@@ -12,7 +12,7 @@ public class Localize
     private Dictionary<string, string>? _userLangCatalog;
     private readonly string _currentLang = "en-US";
     
-    public Localize(IExtensionInfo info)
+    public Localize(IExtensionInfo? info)
     {
         using var extensionCom = SystemExtensionFactory.GetSingletonExtension<ICamApiApplicationSingleton>(
             "Extension.Global.Singletons.Application", info);
