@@ -319,6 +319,8 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess, IDisposable
                         prevLineFeedrate = lineFeedrate;  
                         prevX = p.X;
                         prevY = p.Y;  
+                        var feed = FeedConverter.ConvertToCLDataFeed(lineType); 
+                        clf.OutFeed(feed, lineFeedrate, true);
                         startPathSegment = false;
                     }
                     else
