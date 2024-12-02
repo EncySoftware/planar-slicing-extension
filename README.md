@@ -28,6 +28,7 @@ You can also install the “planar-slicing-extension” through ENCY manually:
    
 4) Click “Install” and, in the window that appears, select the downloaded file “planar-slicing-extension.dext”
 
+5) Restart ENCY
 
 ## Uninstallation instructions:
 1) Launch ENCY
