@@ -18,5 +18,27 @@ https://github.com/EncySoftware/planar-slicing-extension/releases
 
 6) The "Planar slicing" operation will appear in the "Additive" section
 
+## Manual extension installation instructions:
+You can also install the “planar-slicing-extension” through ENCY manually:
+1) Launch ENCY
+   
+2) Open settings
+   
+3) Select the “Extensions” tab
+   
+4) Click “Install” and, in the window that appears, select the downloaded file “planar-slicing-extension.dext”
+
+
+## Uninstallation instructions:
+1) Launch ENCY
+
+2) Open settings
+
+3) Select the “Extensions” tab
+
+4) Select “Extension for Planar slicing operation based on Cura” from the list
+
+5) Click “Uninstall”
+
 ## Localization:
 The operation language is based on ENCY language, provided that this language is available in Cura. You can also manually add translations by creating a file in the “UserLocalization” folder with the extension “*.po” and the language name in the BCP 47 Code format (example en-US.po). The “UserLocalization” folder is located at the path where Planar slicing extension is installed. You can find the path in ENCY settings, in the "Extensions" tab, by selecting the Planar slicing extension.
