@@ -59,16 +59,10 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess, IDisposable
     /// </summary>
     public IExtensionLogger? Logger => _loggerComWrapper?.Instance;
 
-    public CuraEngineControlProcess(ICamApiTechOperationProgressUpdateHandler updateHandler, IExtensionInfo? info)
+    public CuraEngineControlProcess(ICamApiTechOperationProgressUpdateHandler updateHandler)
     {
         _updateHandlerComWrapper = new ComWrapper<ICamApiTechOperationProgressUpdateHandler>(updateHandler);
-
-        // save logger
-        if (info == null)
-            return;
-        using var instanceInfoCom = new ComWrapper<IExtensionInstanceInfo>(info.InstanceInfo);
-        using var extensionManagerCom = new ComWrapper<IExtensionManager>(instanceInfoCom.Instance?.ExtensionManager);
-        _loggerComWrapper = new ComWrapper<IExtensionLogger>(extensionManagerCom.Instance?.Logger);
+        _loggerComWrapper = new ComWrapper<IExtensionLogger>(ExtensionManagerHelper.GetInstance().Logger);
     }
 
     public void Dispose()

@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using CAMAPI.Application;
 using CAMAPI.DotnetHelper;
-using CAMAPI.Extensions;
 using CAMAPI.ResultStatus;
 
 namespace CuraEngineOperation;
@@ -12,10 +11,10 @@ public class Localize
     private Dictionary<string, string>? _userLangCatalog;
     private readonly string _currentLang = "en-US";
     
-    public Localize(IExtensionInfo? info)
+    public Localize()
     {
         using var extensionCom = SystemExtensionFactory.GetSingletonExtension<ICamApiApplicationSingleton>(
-            "Extension.Global.Singletons.Application", info);
+            "Extension.Global.Singletons.Application");
         TResultStatus ret = default;
         var langCode = extensionCom.Instance?.GetApplication(out ret).LanguageCode ?? 0;
         if (ret.Code == TResultStatusCode.rsError)

@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using CAMAPI.DotnetHelper;
-using CAMAPI.Extensions;
-using CAMAPI.TechOperation;
 using CAMAPI.UIDialogs;
 using CAMAPI.UIDialogs.DotnetHelper;
 using CuraEngineParametersLibrary;
@@ -22,8 +20,7 @@ public class OperationProps : IDisposable
     /// Object to get paths to Cura library
     /// </summary>
     private readonly CuraLibraryPath _curaLibraryPath;
-
-    private IExtensionInfo? Info;
+    
     /// <summary>
     /// Properties of CuraEngine
     /// </summary>
@@ -91,9 +88,8 @@ public class OperationProps : IDisposable
     public double FilamentExtrudingLength = 100;
 
     private bool _selectedSettingVisibilitiesVisible;
-
-    public OperationProps(IExtensionInfo info,
-        ICamApiTechOperation operation,
+    
+    public OperationProps(IST_XMLPropPointer xmlProp,
         Parameters curaParameters,
         Localize localize,
         CuraLibraryPath curaLibraryPath)
@@ -102,11 +98,8 @@ public class OperationProps : IDisposable
         _localize = localize;
         _curaLibraryPath = curaLibraryPath;
 
-        // object to build dialog window
-        _propHelpersComWrapper = SystemExtensionFactory.GetSingletonExtension<IST_CustomPropHelpers>("Extension.CustomPropHelpers", info);
-        
-        _operationXmlPropComWrapper = new ComWrapper<IST_XMLPropPointer>(operation.XMLProp);
-        Info ??= info;
+        _propHelpersComWrapper = SystemExtensionFactory.GetSingletonExtension<IST_CustomPropHelpers>("Extension.CustomPropHelpers");
+        _operationXmlPropComWrapper = new ComWrapper<IST_XMLPropPointer>(xmlProp);
     }
 
     public void Dispose()
@@ -115,15 +108,6 @@ public class OperationProps : IDisposable
         _additionalPropIteratorComWrapper?.Dispose();
         _propHelpersComWrapper?.Dispose();
         _operationXmlPropComWrapper?.Dispose();
-        Info = null;
-    }
-    
-    private ComWrapper<IExtensionManager> GetExtensionManager()
-    {
-        if (Info == null)
-            throw new Exception("Failed to get ExtensionInfo");
-        using var instanceInfoCom = new ComWrapper<IExtensionInstanceInfo>(Info.InstanceInfo);
-        return new ComWrapper<IExtensionManager>(instanceInfoCom.Instance?.ExtensionManager);
     }
     
     public IST_CustomPropIterator CreateIterator(Parameters curaParameters)
@@ -212,11 +196,7 @@ public class OperationProps : IDisposable
         genProp.ButtonMode[0] = TCustomPropButtonState.cpbsClickable;
         genProp.ClickAction[0]  = new ButtonClickAction(delegate
         {
-            using var extensionManagerCom = GetExtensionManager();
-            var extensionManager = extensionManagerCom.Instance
-                                   ?? throw new Exception("Failed to get ExtensionManager");
-
-            using var dialogWindow = new CamApiInspectorWindow(extensionManager);
+            using var dialogWindow = new CamApiInspectorWindow();
             dialogWindow.Caption = genParamsCaption;
             dialogWindow.SetPropIteratorGetter(new PropIteratorGetter(delegate()
             {

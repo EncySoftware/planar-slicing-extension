@@ -16,6 +16,6 @@
     <ProjectReference Include="..\CuraEngineNetWrapper\CuraEngineNetWrapper.csproj" />
     <ProjectReference Include="..\CuraEngineParametersLibrary\CuraEngineParametersLibrary.csproj" />
 
-    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="1.2.1-rc.9" />
+    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="1.3.1-dev.12" />
   </ItemGroup>
 </Project>

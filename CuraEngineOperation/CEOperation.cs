@@ -78,9 +78,6 @@ public class CuraEngineOperationSolver :
         resultStatus = default;
         try
         {
-            if (Info == null)
-                throw new Exception("Info is null");
-            
             // save COM objects
             _operationComWrapper = new ComWrapper<ICamApiTechOperation>(context.TechOperation);
             
@@ -93,10 +90,10 @@ public class CuraEngineOperationSolver :
             _curaParamsReceiver = new ParamsReceiver();
             
             // object to manage cura calculating tool path
-            _curaControlProcess = new CuraEngineControlProcess(context.UpdateHandler, Info);
+            _curaControlProcess = new CuraEngineControlProcess(context.UpdateHandler);
 
             // path to cura library
-            _localization = new Localize(Info);
+            _localization = new Localize();
             _warningMessage = _localization.GetLabelTranslation("Path_warning_message", _warningMessage);
 
             // user localization of parameters
@@ -129,22 +126,19 @@ public class CuraEngineOperationSolver :
         {
             try
             {
-                var operation = _operationComWrapper.Instance;
-                if (operation == null)
-                    throw new Exception("Operation is null");
-
                 _localization.ReadMainTranslations(_curaLibraryPath.CuraPath + @"share\cura\resources\i18n");
                 _curaParamsReceiver.CEParameters.CuraPath = _curaLibraryPath.CuraPath;
                 _curaParamsReceiver.CEParameters.ReadAllParametersAndConfigs();
-                            
+
                 // builder of prop iterators
-                _operationProps = new OperationProps(Info, operation, _curaParamsReceiver.CEParameters, _localization, _curaLibraryPath);
+                _operationProps?.Dispose();
+                _operationProps = new OperationProps(Operation.XMLProp, _curaParamsReceiver.CEParameters, _localization, _curaLibraryPath); // разбей на 2 шага - пусть здесь будет только init
                 
                 // event handler, so we can execute some non-mandatory methods of ICamApiTechOperationSolver
                 _operationEventHandlerInitModelFormers ??= new OperationInitModelFormers();
-                operation.RegisterHandler(HandlerIdentInitModelFormers, _operationEventHandlerInitModelFormers, new ListString(), out resultStatus);
+                Operation?.RegisterHandler(HandlerIdentInitModelFormers, _operationEventHandlerInitModelFormers, new ListString(), out resultStatus);
                 _operationEventHandlerLoadSaveXml ??= new OperationLoadSaveXmlProp(_curaParamsReceiver, _operationProps, _curaLibraryPath);
-                operation.RegisterHandler(HandlerIdentLoadSaveXml, _operationEventHandlerLoadSaveXml, new ListString(), out resultStatus);
+                Operation?.RegisterHandler(HandlerIdentLoadSaveXml, _operationEventHandlerLoadSaveXml, new ListString(), out resultStatus);
 
                 IsCorrectInitSolver = true;
             } catch (Exception e)
@@ -156,7 +150,7 @@ public class CuraEngineOperationSolver :
     }
     private int ShowMessageBox(string Msg, TMessageDialogType DlgType, ushort Buttons, TUIButtonType DefaultButton, string ATitle)
     {
-        var box = SystemExtensionFactory.GetSingletonExtension<ICAMAPI_UIDialogsHelper>("Extension.UIDialogs.Core", Info);
+        var box = SystemExtensionFactory.GetSingletonExtension<ICAMAPI_UIDialogsHelper>("Extension.UIDialogs.Core");
         ushort buttons = (ushort)TUIButtonTypeFlags.btfOk;
         return box.Instance.MessageBox(Msg, DlgType, buttons, DefaultButton, ATitle);
     }
@@ -170,7 +164,7 @@ public class CuraEngineOperationSolver :
         Operation?.UnregisterHandler(HandlerIdentLoadSaveXml, out _);
         _operationEventHandlerLoadSaveXml = null;
         _operationEventHandlerInitModelFormers = null;
-        Marshal.FinalReleaseComObject(_operationComWrapper?.Instance);
+        //Marshal.FinalReleaseComObject(_operationComWrapper?.Instance);
         _curaControlProcess?.Dispose();
         _operationProps?.Dispose();
         _operationComWrapper?.Dispose();  
@@ -185,27 +179,22 @@ public class CuraEngineOperationSolver :
         
         try
         {
-            var operation = _operationComWrapper.Instance;
-            if (operation != null)
+            if (Operation == null)
+                return false;
+            
+            using var xmlPropCom = new ComWrapper<IST_XMLPropPointer>(Operation.XMLProp);
+            if (!_curaLibraryPath.CheckLibraryExists(xmlPropCom.Instance))
             {
-                using var xmlPropCom = new ComWrapper<IST_XMLPropPointer>(operation.XMLProp);
-                if (!_curaLibraryPath.CheckLibraryExists(xmlPropCom.Instance))
-                {
-                    _curaControlProcess.Logger.Warning(_warningMessage);
-                    ShowMessageBox(_warningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
-                    return false;
-                }
-                else 
-                {
-                    InitConfigurations(ref resultStatus);
-                }
+                _curaControlProcess.Logger.Warning(_warningMessage);
+                ShowMessageBox(_warningMessage, TMessageDialogType.mdtWarning, (ushort)1, TUIButtonType.btOk, "");
+                return false;
+            }
 
-                if (_curaParamsReceiver == null)
-                    throw new Exception("CuraParamsReceiver is null");
-                iterator = _operationProps?.CreateIterator(_curaParamsReceiver.CEParameters);
-                return true;          
-            }  
-            return false;  
+            InitConfigurations(ref resultStatus);
+            if (_curaParamsReceiver == null)
+                throw new Exception("CuraParamsReceiver is null");
+            iterator = _operationProps?.CreateIterator(_curaParamsReceiver.CEParameters);
+            return true;
         }
         catch (Exception e)
         {
