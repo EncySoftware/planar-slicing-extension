@@ -48,6 +48,9 @@ public class Parameter
         HasMinimumValueWarning = false;
         HasMaximumValueWarning = false;
         calculatedValue = "0";
+        id = "";
+        label = "";
+        description = "";
     }
     public string id;
     public string description;

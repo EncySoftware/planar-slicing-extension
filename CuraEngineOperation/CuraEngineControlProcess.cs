@@ -57,7 +57,7 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess, IDisposable
     /// <summary>
     /// Logger object
     /// </summary>
-    public IExtensionLogger? Logger => _loggerComWrapper.Instance;
+    public IExtensionLogger? Logger => _loggerComWrapper?.Instance;
 
     public CuraEngineControlProcess(ICamApiTechOperationProgressUpdateHandler updateHandler, IExtensionInfo? info)
     {
@@ -68,14 +68,13 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess, IDisposable
             return;
         using var instanceInfoCom = new ComWrapper<IExtensionInstanceInfo>(info.InstanceInfo);
         using var extensionManagerCom = new ComWrapper<IExtensionManager>(instanceInfoCom.Instance?.ExtensionManager);
-        using var loggerCom = new ComWrapper<IExtensionLogger>(extensionManagerCom.Instance?.Logger);
-        _loggerComWrapper = new ComWrapper<IExtensionLogger>(loggerCom.Instance);
+        _loggerComWrapper = new ComWrapper<IExtensionLogger>(extensionManagerCom.Instance?.Logger);
     }
 
     public void Dispose()
     {
         _updateHandlerComWrapper.Dispose();
-        _loggerComWrapper.Dispose();
+        _loggerComWrapper?.Dispose();
     }
 
     public void OnProgress(double progress)
@@ -320,6 +319,8 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess, IDisposable
                         prevLineFeedrate = lineFeedrate;  
                         prevX = p.X;
                         prevY = p.Y;  
+                        var feed = FeedConverter.ConvertToCLDataFeed(lineType); 
+                        clf.OutFeed(feed, lineFeedrate, true);
                         startPathSegment = false;
                     }
                     else

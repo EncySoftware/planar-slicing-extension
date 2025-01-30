@@ -230,7 +230,13 @@ public class GCodeCommand: IGCodeLine
                         clf.OutFeed(feed, feedValue, true);                
                 }
             }
-
+            else
+            {
+                LastFeedValue = prevFeedValue;
+                feedValue = prevFeedValue;
+                feed = FeedConverter.ConvertToCLDataFeed((int)prevFeedType);
+            }
+            IsFeedValueChanged = true;
             AddFilamentExtrudingToCLData(clf, false);
                 
             if ((IsXChanged || IsYChanged || IsZChanged) && !isStartGCode) 
@@ -426,7 +432,7 @@ public class GCodeCommand: IGCodeLine
                 string value = "0";
                 if (index<parameter.Length)
                     value = parameter.Substring(index);
-                Parameters.Add(key, value);
+                Parameters[key] = value;
             }
         }
     }

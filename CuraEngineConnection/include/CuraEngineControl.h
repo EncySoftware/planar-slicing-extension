@@ -31,9 +31,9 @@ public:
         {
             meshReciv = new CuraEngineMeshReceiver();
             meshRecivI = meshReciv;
+            meshRecivI.AddRef();
+            meshRecivI.AddRef();
         }
-        meshRecivI.AddRef();
-        meshRecivI.AddRef();
         *Value = meshRecivI.GetInterfacePtr();
         return 0;
     }
@@ -44,7 +44,9 @@ public:
         /* [in] */ BSTR CuraPath,
         /* [retval][out] */ VARIANT_BOOL *result) override
     {
-        return (App->Slice(CuraEngineControlProcess, ParamsReceiver, meshReciv, CuraPath, result));
+        auto res = App->Slice(CuraEngineControlProcess, ParamsReceiver, meshReciv, CuraPath, result);
+        meshRecivI = nullptr;
+        return (res);
     }
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) override
     {

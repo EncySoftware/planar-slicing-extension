@@ -361,10 +361,13 @@ class Application
         CEParamsReceiver.CEParameters.FillAndParseParameters("C:\\Program Files\\UltiMaker Cura 5.7.1\\share\\cura\\resources\\definitions\\ultimaker_s5.def.json", 
                                                             "C:\\Program Files\\UltiMaker Cura 5.7.1\\share\\cura\\resources\\extruders\\ultimaker_s5_extruder_left.def.json");
         CEControlProcess = new CuraEngineControlProcess(); 
-        var lib = CuraEngineConnectionHelper.LoadNativeLib("C:\\Program Files\\UltiMaker Cura 5.7.1\\");
-        var tr = lib.TrianglesReciever;
-        FillPoints(tr);
-        lib.Slice(CEControlProcess, CEParamsReceiver, "C:\\Program Files\\UltiMaker Cura 5.7.1\\");
+        using var lib = CuraEngineConnectionHelper.LoadNativeLib("C:\\Program Files\\UltiMaker Cura 5.7.1\\");
+        if (lib!=null)
+        {
+            var tr = lib.Instance.TrianglesReciever;
+            FillPoints(tr);
+            lib.Instance.Slice(CEControlProcess, CEParamsReceiver, "C:\\Program Files\\UltiMaker Cura 5.7.1\\");
+        }     
     }
     public void StartCalculateInCuraEngine()
     {

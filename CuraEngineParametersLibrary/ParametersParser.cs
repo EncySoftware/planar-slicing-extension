@@ -260,13 +260,13 @@ public class ParametersParser
         {
             if (name == "int" && args.Parameters.Length==1)
             {
-                var expression = args.Parameters[0].Evaluate().ToString();
-                if (expression.Contains("defaultExtruderPosition"))
+                if (args.Parameters[0].ParsedExpression.ToString().Contains("defaultExtruderPosition"))
                 {
                    args.Result = 0; 
                 }
                 else
                 {
+                    var expression = args.Parameters[0].Evaluate().ToString();
                     var eval = args.Parameters[0].Evaluate();
                     args.Result = Convert.ToInt32(eval);
                 }

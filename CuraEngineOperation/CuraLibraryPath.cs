@@ -15,12 +15,8 @@ public class CuraLibraryPath
     private readonly string _autoCuraPath = "";
     public string UserCuraPath = "";
 
-    public CuraLibraryPath(IST_XMLPropPointer xmlProp)
+    public CuraLibraryPath(IST_XMLPropPointer? xmlProp)
     {
-        using var xmlPropCom = new ComWrapper<IST_XMLPropPointer>(xmlProp);
-        var xmlPropObj = xmlPropCom.Instance
-                      ?? throw new Exception("XMLProp is null");
-        
         var assemblyLocation = Assembly.GetExecutingAssembly().Location;
         var assemblyDirectory = Path.GetDirectoryName(assemblyLocation)+"\\";
         var curaSettingsJsonFile = Path.Combine(assemblyDirectory, "CuraSettings.json");
@@ -64,7 +60,7 @@ public class CuraLibraryPath
                         var value = childProperty.Value.GetString() ?? "";
                         UserCuraPath = value;
                         _userCuraPathFromJSon = value;
-                        xmlPropObj.Ptr["CuraPath.Path"].ValueAsString = UserCuraPath;
+                        xmlProp.Str["CuraPath.Path"] = UserCuraPath;
                     }
                 }
             }
@@ -88,16 +84,16 @@ public class CuraLibraryPath
     
     public bool CheckLibraryExists(IST_XMLPropPointer xmlProp)
     {
-        UserPathEnabled = xmlProp.Ptr["CuraPath.SetPath"].ValueAsBoolean;
+        UserPathEnabled = xmlProp.Bol["CuraPath.SetPath"];
         if (_autoCuraPath=="" || !Directory.Exists(_autoCuraPath) || !CuraEnginePathCorrect(_autoCuraPath) || UserPathEnabled)
         {
-            var userCuraPathFromXml = xmlProp.Ptr["CuraPath.Path"].ValueAsString;
+            var userCuraPathFromXml = xmlProp.Str["CuraPath.Path"];
             if (userCuraPathFromXml!="" && File.Exists(userCuraPathFromXml) && CuraEnginePathCorrect(userCuraPathFromXml))
             {
                 CuraPath = @Path.GetDirectoryName(userCuraPathFromXml) + @"\";
                 UserPathEnabled = true;
-                xmlProp.Ptr["CuraPath.SetPath"].ValueAsBoolean = UserPathEnabled;
-                xmlProp.Ptr["CuraPath.Path"].ValueAsString = userCuraPathFromXml;
+                xmlProp.Bol["CuraPath.SetPath"] = UserPathEnabled;
+                xmlProp.Str["CuraPath.Path"] = userCuraPathFromXml;
                 if (userCuraPathFromXml!=UserCuraPath)
                 {
                     UserCuraPath = userCuraPathFromXml;
@@ -106,7 +102,7 @@ public class CuraLibraryPath
             }
             else
             {
-                UserPathEnabled = xmlProp.Ptr["CuraPath.SetPath"].ValueAsBoolean; 
+                UserPathEnabled = xmlProp.Bol["CuraPath.SetPath"]; 
                 if (!UserPathEnabled || userCuraPathFromXml=="" || !File.Exists(userCuraPathFromXml) || !CuraEnginePathCorrect(userCuraPathFromXml))
                 {
                     if (userCuraPathFromXml!=null)
