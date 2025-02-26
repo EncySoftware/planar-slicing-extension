@@ -62,7 +62,10 @@ public class CuraEngineControlProcess : ICuraEngineControlProcess, IDisposable
     public CuraEngineControlProcess(ICamApiTechOperationProgressUpdateHandler updateHandler)
     {
         _updateHandlerComWrapper = new ComWrapper<ICamApiTechOperationProgressUpdateHandler>(updateHandler);
-        _loggerComWrapper = new ComWrapper<IExtensionLogger>(ExtensionManagerHelper.GetInstance().Logger);
+        using var extensionManagerCom = ExtensionManagerHelper.GetInstance();
+        var extensionManager = extensionManagerCom.Instance
+            ?? throw new Exception("Failed to load IExtensionManager");
+        _loggerComWrapper = new ComWrapper<IExtensionLogger>(extensionManager.Logger);
     }
 
     public void Dispose()
