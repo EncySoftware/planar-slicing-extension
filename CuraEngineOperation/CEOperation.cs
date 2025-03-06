@@ -268,7 +268,15 @@ public class CuraEngineOperationSolver :
         _curaControlProcess.tpm = _operationProps.Tpm;
         _curaControlProcess.FilamentExtrudingLength = _operationProps.FilamentExtrudingLength;
         
-        lib.Instance.Slice(_curaControlProcess, _curaParamsReceiver, curaPath);
+        var task = Task.Run(() => lib.Instance.Slice(_curaControlProcess, _curaParamsReceiver, curaPath));
+
+        using var pm = SystemExtensionFactory.GetSingletonExtension<ICAMAPI_UIDialogsHelper>("Extension.UIDialogs.Core");       
+        while (!task.IsCompleted)
+        {          
+            pm.Instance.ProcessMessages();
+            Task.Delay(100).Wait();
+        }
+        task.Wait();      
     }
  
     private void FillPoints(ICamApiTechOperation techOperation, ComWrapper<ITrianglesReciever> r)

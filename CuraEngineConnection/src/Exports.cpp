@@ -7,6 +7,7 @@ extern "C" __declspec(dllexport) void* GetCuraEngineConnectionLibPointer()
     CEC = new CuraEngineControl();
     CEC.AddRef();
     CEC.AddRef();
+    CEC.AddRef();
     void* res = CEC.GetInterfacePtr();
     return (res);
 }
