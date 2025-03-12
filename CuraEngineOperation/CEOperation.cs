@@ -68,6 +68,7 @@ public class CuraEngineOperationSolver :
     private const string HandlerIdentInitModelFormers = "InitModelFormers";
     private const string HandlerIdentLoadSaveXml = "LoadSaveXml";
     private bool IsCorrectInitSolver = false;
+    private string ExtensionVersion = "planar-slicing-extension v1.2.2";
     private string _warningMessage = "Cura not found installed. Set path to CuraEngine.exe manually.\nParameters tab -> Set Cura path";
     
     /// <summary>
@@ -91,6 +92,7 @@ public class CuraEngineOperationSolver :
             
             // object to manage cura calculating tool path
             _curaControlProcess = new CuraEngineControlProcess(context.UpdateHandler);
+            _curaControlProcess.Logger.Info(ExtensionVersion);
 
             // path to cura library
             _localization = new Localize();
