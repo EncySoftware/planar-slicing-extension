@@ -1,5 +1,5 @@
 {
-  "name": "Extension for Planar slicing operation based on Cura",
+  "name": "Extension for Planar slicing operation based on Cura (v1.2.2)",
   "description": "Extension that allows you to calculate toolpath using the CuraEngine which is the part of Ultimaker Cura (https://ultimaker.com/)",
   "module_path": "${extensionJsonFolder}\\CuraEngineOperation.dll",
   "extensions": [
