@@ -4,6 +4,7 @@ Extension that allows you to calculate toolpath using the CuraEngine which is th
 This plugin is designed to integrate an operation based on Ultimaker Cura.
 
 ## Installation instructions:
+If this extension was previously installed, it is recommended to remove it first. See the removal instructions below.
 1) Download and install Ultimaker Cura (https://github.com/Ultimaker/Cura/releases/download/5.7.1/UltiMaker-Cura-5.7.1-win64-X64.exe)
 Recommended version: 5.7.1
 
@@ -12,13 +13,15 @@ https://github.com/EncySoftware/planar-slicing-extension/releases
 
 3) Download and install recommended ENCY version (as indicated in the downloaded extension release description) 
    
-4) Double click on the downloaded "planar-slicing-extension.dext" file for automatic installation
+4) Double click on the downloaded "planar-slicing-extension.dext" file for automatic installation (ENCY must be closed during the installation)
 
-5) Run the CAM system
+5) Launch ENCY
 
 6) The "Planar slicing" operation will appear in the "Additive" section
 
 ## Manual extension installation instructions:
+If this extension was previously installed, it is recommended to remove it first. See the removal instructions below.
+
 You can also install the “planar-slicing-extension” through ENCY manually:
 1) Launch ENCY
    
@@ -40,6 +43,8 @@ You can also install the “planar-slicing-extension” through ENCY manually:
 4) Select “Extension for Planar slicing operation based on Cura” from the list
 
 5) Click “Uninstall”
+   
+6) Restart ENCY
 
 ## Localization:
 The operation language is based on ENCY language, provided that this language is available in Cura. You can also manually add translations by creating a file in the “UserLocalization” folder with the extension “*.po” and the language name in the BCP 47 Code format (example en-US.po). The “UserLocalization” folder is located at the path where Planar slicing extension is installed. You can find the path in ENCY settings, in the "Extensions" tab, by selecting the Planar slicing extension.
