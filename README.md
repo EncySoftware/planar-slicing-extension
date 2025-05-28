@@ -4,7 +4,7 @@ Extension that allows you to calculate toolpath using the CuraEngine which is th
 This plugin is designed to integrate an operation based on Ultimaker Cura.
 
 ## Installation instructions:
-If this extension was previously installed, it is recommended to remove it first. See the removal instructions below.
+If this extension was previously installed, it is recommended to uninstall it first. See the uninstallation instructions below.
 1) Download and install Ultimaker Cura (https://github.com/Ultimaker/Cura/releases/download/5.7.1/UltiMaker-Cura-5.7.1-win64-X64.exe)
 Recommended version: 5.7.1
 
@@ -20,7 +20,7 @@ https://github.com/EncySoftware/planar-slicing-extension/releases
 6) The "Planar slicing" operation will appear in the "Additive" section
 
 ## Manual extension installation instructions:
-If this extension was previously installed, it is recommended to remove it first. See the removal instructions below.
+If this extension was previously installed, it is recommended to uninstall it first. See the uninstallation instructions below.
 
 You can also install the “planar-slicing-extension” through ENCY manually:
 1) Launch ENCY
