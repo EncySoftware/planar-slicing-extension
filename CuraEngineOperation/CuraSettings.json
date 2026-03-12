@@ -1,0 +1,7 @@
+{
+  "name": "CuraSettings",
+  "settings": {
+    "PathToCura": "C:\\Program Files\\UltiMaker Cura 5.7.1\\",
+    "UserPathToCura": ""
+  }
+}

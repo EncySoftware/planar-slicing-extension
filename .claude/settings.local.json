@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I{} basename {})",
+      "Bash(powershell -Command \"Add-Type -Path ''''.stbuild/build/bin/BuildSystem.ProjectList.dll''''; [BuildSystem.ProjectList.ProjectListExtensions] | Get-Member\")",
+      "Bash(powershell -Command \":*)",
+      "Bash(grep -E \"CuraEngineConnection\\\\.dll$\")",
+      "Bash(mkdir -p resources/UserLocalization)",
+      "Bash(cp CuraEngineConnection/build/Debug/CuraConnectionInterface.dll resources/)",
+      "Bash(cp CuraEngineConnection/build/test/CuraEngineConnection.dll resources/)",
+      "Bash(cp CuraEngineConnection/build/test/UltimakerCuraPlugin_icon.png resources/)",
+      "Bash(cp CuraEngineConnection/build/Debug/UserLocalization/en-US.po resources/UserLocalization/)",
+      "Bash(cd:*)"
+    ]
+  }
+}

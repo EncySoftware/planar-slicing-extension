@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Title>CuraEngineOperation</Title>
@@ -8,14 +8,88 @@
     <Nullable>enable</Nullable>
     <NoWarn>CS8603</NoWarn>
     <OutDir>../CuraEngineConnection/build/$(Configuration)</OutDir>
-    <CAMPath>C:/Program Files/ENCY Software/ENCY NB/Bin64</CAMPath>
+    <Authors>ENCY</Authors>
+    <PackageId>EncySoftware.CuraEngineOperation</PackageId>
+    <PackageTags>ency-extension;operationsolver</PackageTags>
+    <Description>Allows ENCY to calculate toolpath using the CuraEngine which is the part of Ultimaker Cura (https://ultimaker.com/)</Description>
+    <PackageIcon>CuraPath_icon.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/EncySoftware/planar-slicing-extension</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/EncySoftware/planar-slicing-extension</RepositoryUrl>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
+  <!-- CAMAPI is provided by the ENCY host process; PrivateAssets=all keeps it out of the .nuspec
+       so consumers do not pull ENCY assemblies when restoring this package. -->
   <ItemGroup>
-    <Reference Include="$(OutDir)\CuraConnectionInterface.dll" />
+    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="2.0.16" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Compile-time references and managed project dependencies. -->
+  <ItemGroup>
+    <!-- CuraConnectionInterface.dll is the IDL-generated COM interop assembly stored in git LFS.
+         Private=false prevents double-copying; runtime copy comes from contentFiles below. -->
+    <Reference Include="..\resources\CuraConnectionInterface.dll">
+      <Private>false</Private>
+    </Reference>
     <ProjectReference Include="..\CuraEngineNetWrapper\CuraEngineNetWrapper.csproj" />
     <ProjectReference Include="..\CuraEngineParametersLibrary\CuraEngineParametersLibrary.csproj" />
-
-    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="1.4.1-dev.5" />
   </ItemGroup>
+
+  <!-- Package icon and readme (NuGet metadata only, not deployed to extension folder). -->
+  <ItemGroup>
+    <None Include="CuraPath_icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Extension descriptor files: deployed alongside the main DLL in the ENCY extension folder. -->
+  <ItemGroup>
+    <None Include="CuraEngineToolpath_ExtOp.xml" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="CuraEngineOperation.settings.json" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="CuraSettings.json" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Managed dependency DLLs built from source; resolved from the shared OutDir after compilation. -->
+  <ItemGroup>
+    <None Include="$(OutDir)\CuraEngineNetWrapper.dll" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="$(OutDir)\CuraEngineParametersLibrary.dll" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="$(OutDir)\NCalc.dll" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="$(OutDir)\Antlr4.Runtime.Standard.dll" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Native DLLs and localisation resources tracked in git LFS under resources/.
+       TODO: when rebuilding native components, update resources/ and commit via LFS. -->
+  <ItemGroup>
+    <None Include="..\resources\CuraConnectionInterface.dll" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\resources\CuraEngineConnection.dll" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\resources\UltimakerCuraPlugin_icon.png" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\resources\UserLocalization\en-US.po" Pack="true" PackagePath="contentFiles/any/any/UserLocalization/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\resources\UserLocalization\ru_RU.po" Pack="true" PackagePath="contentFiles/any/any/UserLocalization/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
