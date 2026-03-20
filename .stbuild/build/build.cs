@@ -7,6 +7,7 @@ using BuildSystem.Info;
 using BuildSystem.ProjectList;
 using Loggers;
 using Logging;
+using LoggingLevel = Logging.LogLevel;
 using Nuke.Common;
 using Nuke.Common.Utilities.Collections;
 
@@ -46,8 +47,26 @@ public class Build : NukeBuild
     [Parameter("Force build of projects")]
     public readonly string ForceBuild = "false";
 
-    /// <summary> Build space logger. </summary>
-    public static readonly ILogger Logger = new LoggerConsole();
+    private LoggingLevel _logLevel => LogLevel.ToLower() switch {
+        "debug"   => LoggingLevel.debug,
+        "verbose" => LoggingLevel.verbose,
+        "head"    => LoggingLevel.head,
+        _         => LoggingLevel.info
+    };
+
+    private ILogger? _logger;
+    public ILogger Logger => _logger ??= InitLogger();
+
+    private ILogger InitLogger() {
+        var bcaster = new LoggerBroadCaster();
+        var console = new LoggerConsole();
+        var file = new LoggerFile(RootDirectory + "//logs", "enc", 12);
+        file.setMinLevel(LoggingLevel.debug);
+        console.setMinLevel(_logLevel);
+        bcaster.Loggers.Add(file);
+        bcaster.Loggers.Add(console);
+        return bcaster;
+    }
 
     private IBuildSpace? _buildSpace;
     private IBuildSpace BSpace => _buildSpace ??= InitBuildSpace();
@@ -64,13 +83,6 @@ public class Build : NukeBuild
     /// </summary>
     private Target SetBuildInfo => _ => _
         .Executes(() => {
-            switch (LogLevel) {
-                case "debug": Logger.setMinLevel(Logging.LogLevel.debug); break;
-                case "verbose": Logger.setMinLevel(Logging.LogLevel.verbose); break;
-                case "head": Logger.setMinLevel(Logging.LogLevel.head); break;
-                default: Logger.setMinLevel(Logging.LogLevel.info); break;
-            }
-
             BuildInfo.RunParams[RunInfo.Variant] = Variant;
             BuildInfo.RunParams[RunInfo.Local] = "local";
             BuildInfo.RunParams[RunInfo.ForceBuild] = ForceBuild;

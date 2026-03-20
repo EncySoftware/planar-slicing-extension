@@ -10,6 +10,9 @@
     <OutDir>../CuraEngineConnection/build/$(Configuration)</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NCalcSync" Version="3.12.0" />
+    <!-- PrivateAssets=all: NCalcSync DLLs are bundled as contentFiles in the extension package;
+         declaring it as a package dependency would cause ENCY to resolve it separately, resulting
+         in duplicate DLLs and a potential restore failure on feeds that do not host NCalcSync. -->
+    <PackageReference Include="NCalcSync" Version="3.12.0" PrivateAssets="all" />
   </ItemGroup>
 </Project>

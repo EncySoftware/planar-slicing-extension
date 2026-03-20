@@ -98,8 +98,22 @@ Files packed as `contentFiles/any/any/`:
 - `CuraEngineOperation.settings.json`, `CuraEngineToolpath_ExtOp.xml`, `CuraSettings.json`
 - `UltimakerCuraPlugin_icon.png`, `UserLocalization/en-US.po`, `UserLocalization/ru_RU.po` — from `resources/`
 
-`EncySoftware.CAMAPI.SDK.Net` is marked `PrivateAssets="all"`: the ENCY host process already
-provides those assemblies, so they must not appear in the package or the restored output folder.
+### Zero runtime NuGet dependencies
+
+The `.nuspec` declares **no runtime dependencies**. All required assemblies are bundled directly
+in the package as `contentFiles`. This is intentional: ENCY's RestorerNuget template must be able
+to deploy the extension into any flat directory without performing additional NuGet restores.
+
+This is enforced by marking every build-time package reference as `PrivateAssets="all"`:
+
+| Package | Project | Reason |
+|---|---|---|
+| `EncySoftware.CAMAPI.SDK.Net` | `CuraEngineOperation`, `CuraEngineNetWrapper` | Provided by the ENCY host process at runtime |
+| `NCalcSync` | `CuraEngineParametersLibrary` | DLLs bundled as contentFiles; declaring it as a dependency would cause ENCY to resolve it separately |
+
+**Rule**: whenever a new `PackageReference` is added to any project in this solution, it must be
+marked `PrivateAssets="all"` and its output DLL must be added as a `contentFiles` entry in
+`CuraEngineOperation.csproj`.
 
 ---
 

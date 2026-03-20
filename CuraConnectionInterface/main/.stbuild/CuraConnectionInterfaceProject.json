@@ -4,5 +4,6 @@
 	"sources": [
 		"./*.json",
 		"../*.idl"
-	]
+	],
+	"package_manager": "package_manager"
 }

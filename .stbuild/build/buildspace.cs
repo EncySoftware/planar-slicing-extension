@@ -29,11 +29,12 @@ internal class BuildSpaceSettings : SettingsObject
     private readonly string? _config;
     private static string GitBranch => Environment.GetEnvironmentVariable("GITHUB_REF_NAME") + "";
 
-    private readonly ReaderJson _readerJson = new(Build.Logger);
+    private readonly ReaderJson _readerJson;
 
     /// <inheritdoc />
     public BuildSpaceSettings(ILogger logger, string[] configFiles, string variant)
     {
+        _readerJson = new ReaderJson(logger);
         _readerJson.ReadRules(configFiles);
         ReaderLocalVars = _readerJson.LocalVars;
         ReaderDefines = _readerJson.Defines;
