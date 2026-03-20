@@ -10,7 +10,8 @@
       "Bash(cp CuraEngineConnection/build/test/CuraEngineConnection.dll resources/)",
       "Bash(cp CuraEngineConnection/build/test/UltimakerCuraPlugin_icon.png resources/)",
       "Bash(cp CuraEngineConnection/build/Debug/UserLocalization/en-US.po resources/UserLocalization/)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(git rm:*)"
     ]
   }
 }

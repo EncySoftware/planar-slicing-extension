@@ -10,27 +10,29 @@ Fix the broken CI `Push` target at the same time.
 
 ## 1. `resources/` folder (new)
 
-Native binaries and localisation files that are not built by the C# toolchain are now stored under
+Native binaries and localisation files that are not built by the CI toolchain are stored under
 `resources/` and tracked in git via LFS (`.gitattributes` already declares `*.dll filter=lfs`).
 
 | File | Source |
 |---|---|
-| `resources/CuraConnectionInterface.dll` | `CuraEngineConnection/build/Debug/` |
-| `resources/CuraEngineConnection.dll` | `CuraEngineConnection/build/test/` |
+| `resources/CuraEngineConnection.dll` | `CuraEngineConnection/build/test/` (Conan/CMake build) |
 | `resources/UltimakerCuraPlugin_icon.png` | `CuraEngineConnection/build/test/` |
 | `resources/UserLocalization/en-US.po` | `CuraEngineConnection/build/Debug/UserLocalization/` |
 | `resources/UserLocalization/ru_RU.po` | `CuraEngineConnection/build/test/UserLocalization/` |
 
-**TODO**: whenever native components are rebuilt, copy the new binaries into `resources/` and commit
-them through LFS before packing/publishing.
+`CuraConnectionInterface.dll` is **not** stored in `resources/` — it is generated during the build
+by the IDL step (MIDL + tlbimp) and placed in `$(OutDir)`. See section 4 for details.
+
+**TODO**: whenever `CuraEngineConnection.dll` is rebuilt, copy the new binary into `resources/` and
+commit it through LFS before packing/publishing.
 
 ---
 
 ## 2. `CuraEngineNetWrapper/CuraEngineNetWrapper.csproj`
 
-- **Reference to `CuraConnectionInterface.dll`** changed from `$(OutDir)\CuraConnectionInterface.dll`
-  (build output, requires Delphi toolchain) to `..\resources\CuraConnectionInterface.dll`
-  (git-tracked). `Private=false` prevents MSBuild from re-copying it to `OutDir`.
+- **Reference to `CuraConnectionInterface.dll`** points to `$(OutDir)\CuraConnectionInterface.dll`
+  — produced by the IDL build step (MIDL + tlbimp). `Private=false` prevents MSBuild from
+  re-copying it to `OutDir`.
 - **`EncySoftware.CAMAPI.SDK.Net`** marked `PrivateAssets="all"`: CAMAPI assemblies are provided by
   the ENCY host process and must not appear in the package or be copied to the output folder.
 
@@ -42,7 +44,7 @@ them through LFS before packing/publishing.
 - Duplicate `PackageReference` to `EncySoftware.CAMAPI.SDK.Net` removed (was present in two
   `ItemGroup` elements).
 - `EncySoftware.CAMAPI.SDK.Net` marked `PrivateAssets="all"` (same reason as above).
-- Reference to `CuraConnectionInterface.dll` changed to `resources/` with `Private=false`.
+- Reference to `CuraConnectionInterface.dll` points to `$(OutDir)` (built by IDL step) with `Private=false`.
 
 ### NuGet package contents (all new `contentFiles/any/any/`)
 Every file listed below is packed with `CopyToOutputDirectory=Always` so that consumers using
@@ -53,7 +55,8 @@ output directory alongside `CuraEngineOperation.dll`.
 |---|---|
 | Extension descriptors | `CuraEngineToolpath_ExtOp.xml`, `CuraEngineOperation.settings.json`, `CuraSettings.json` |
 | Managed deps (from `$(OutDir)`) | `CuraEngineNetWrapper.dll`, `CuraEngineParametersLibrary.dll`, `NCalc.dll`, `Antlr4.Runtime.Standard.dll` |
-| Native DLLs (from `resources/`) | `CuraConnectionInterface.dll`, `CuraEngineConnection.dll` |
+| IDL-generated (from `$(OutDir)`) | `CuraConnectionInterface.dll` |
+| Native DLLs (from `resources/`) | `CuraEngineConnection.dll` |
 | Resources (from `resources/`) | `UltimakerCuraPlugin_icon.png`, `UserLocalization/en-US.po`, `UserLocalization/ru_RU.po` |
 
 `CuraEngineOperation.dll` itself stays in `lib/net8.0-windows/` (default SDK behaviour) and is also
@@ -71,9 +74,11 @@ copied to the output folder via `CopyLocalLockFileAssemblies=true`.
 
 ### Added
 
-**`CompileCSharp`** (private helper)
-Compiles only projects whose `Type` equals `"CSharp"`. Used by CI where the Delphi IDL toolchain
-and Conan/CMake are not available. Native DLLs come from `resources/`.
+**`CompileDotnet`** (private helper)
+Compiles projects whose `Type` is `"CSharp"` or `"Idl"`. Used by CI where Conan/CMake are not
+available. The IDL step runs MIDL + tlbimp (Windows SDK tools, available on `windows-latest`) and
+produces `CuraConnectionInterface.dll` in `$(OutDir)`. `CuraEngineConnection.dll` (C++ / Conan)
+comes from `resources/`.
 
 **`Pack`**
 Depends on `Compile` (full build: IDL + Conan + C#). Calls
@@ -81,7 +86,7 @@ Depends on `Compile` (full build: IDL + Conan + C#). Calls
 without publishing. Intended for local development and pre-publish verification.
 
 **`Push`**
-Depends on `CompileCSharp` (C# only). Calls
+Depends on `CompileDotnet` (IDL + C#). Calls
 `BSpace.Projects.Deploy(Variant, onlyCreate: false, _ => true)` — creates and publishes the
 package. Intended for CI. Requires `NUGET_FEED_URL` and `NUGET_AUTH_TOKEN` environment variables.
 
@@ -112,8 +117,9 @@ build.ps1
   dotnet restore stbuild.csproj     # EncySoftware.BuildSystem from nuget.org or nexus.encycam.com
   dotnet build stbuild.csproj
   dotnet run stbuild -- Push Release_x64
-    CompileCSharp
-      BSpace.Projects.Compile (CSharp filter only)
+    CompileDotnet
+      BSpace.Projects.Compile (Idl + CSharp filter)
+        midl.exe + tlbimp.exe → CuraConnectionInterface.dll in $(OutDir)
         dotnet build CuraEngineOperation.csproj
           # feeds provided by SetStorageInfoFunc in buildspace.cs:
           #   NUGET_FEED_URL (nuget.org for prod)
@@ -128,7 +134,7 @@ build.ps1
 ## Potential issues to check
 
 1. **`$(OutDir)` DLLs at pack time** — `NCalc.dll` and `Antlr4.Runtime.Standard.dll` are restored
-   by `dotnet build` into `OutDir`. Verify they are present there after `CompileCSharp` finishes
+   by `dotnet build` into `OutDir`. Verify they are present there after `CompileDotnet` finishes
    and before `dotnet pack` runs. If stbuild separates restore and build phases this may require
    an explicit restore step.
 
@@ -137,10 +143,11 @@ build.ps1
    `lib/`. If so, it appears twice in the restored output (harmless, but worth verifying with
    `dotnet pack --verbosity detailed`).
 
-3. **LFS on CI** — `actions/checkout@v4` does not fetch LFS objects by default. Add
-   `lfs: true` to the checkout step if `resources/*.dll` are not being included in the package:
-   ```yaml
-   - uses: actions/checkout@v4
-     with:
-       lfs: true
-   ```
+3. **LFS on CI** — `actions/checkout@v4` does not fetch LFS objects by default.
+   Both workflow files now include `lfs: true` on the checkout step so that
+   `resources/CuraEngineConnection.dll` is properly downloaded before the build runs.
+
+4. **IDL step ordering** — the build system must compile the IDL project before the C# projects,
+   since `CuraEngineNetWrapper.csproj` references `$(OutDir)\CuraConnectionInterface.dll`. The
+   stbuild dependency graph handles this via project type ordering when both `Idl` and `CSharp`
+   types are included in the `CompileDotnet` filter.

@@ -11,9 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Compile-time reference to the IDL-generated COM interop assembly stored in git LFS.
-         Private=false prevents MSBuild from copying it to OutDir (it is deployed via the package). -->
-    <Reference Include="..\resources\CuraConnectionInterface.dll">
+    <!-- Compile-time reference to CuraConnectionInterface.dll produced by the IDL build step.
+         Private=false prevents MSBuild from re-copying it; the package contentFiles entry handles deployment. -->
+    <Reference Include="$(OutDir)\CuraConnectionInterface.dll">
       <Private>false</Private>
     </Reference>
     <!-- CAMAPI is provided by the ENCY host process; exclude runtime assets to avoid bundling them. -->

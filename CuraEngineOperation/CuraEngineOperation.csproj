@@ -28,9 +28,9 @@
 
   <!-- Compile-time references and managed project dependencies. -->
   <ItemGroup>
-    <!-- CuraConnectionInterface.dll is the IDL-generated COM interop assembly stored in git LFS.
+    <!-- CuraConnectionInterface.dll is produced by the IDL build step (MIDL + tlbimp).
          Private=false prevents double-copying; runtime copy comes from contentFiles below. -->
-    <Reference Include="..\resources\CuraConnectionInterface.dll">
+    <Reference Include="$(OutDir)\CuraConnectionInterface.dll">
       <Private>false</Private>
     </Reference>
     <ProjectReference Include="..\CuraEngineNetWrapper\CuraEngineNetWrapper.csproj" />
@@ -72,12 +72,16 @@
     </None>
   </ItemGroup>
 
-  <!-- Native DLLs and localisation resources tracked in git LFS under resources/.
-       TODO: when rebuilding native components, update resources/ and commit via LFS. -->
+  <!-- CuraConnectionInterface.dll is built by the IDL step; packed from OutDir. -->
   <ItemGroup>
-    <None Include="..\resources\CuraConnectionInterface.dll" Pack="true" PackagePath="contentFiles/any/any/">
+    <None Include="$(OutDir)\CuraConnectionInterface.dll" Pack="true" PackagePath="contentFiles/any/any/">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <!-- Native DLLs and localisation resources tracked in git LFS under resources/.
+       TODO: when rebuilding CuraEngineConnection, update resources/ and commit via LFS. -->
+  <ItemGroup>
     <None Include="..\resources\CuraEngineConnection.dll" Pack="true" PackagePath="contentFiles/any/any/">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

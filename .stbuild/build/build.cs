@@ -106,16 +106,18 @@ public class Build : NukeBuild
         });
 
     /// <summary>
-    /// Build C# projects only. Used by CI where Delphi and Conan are not available;
-    /// native DLLs are sourced from the resources/ folder tracked in git LFS.
+    /// Build IDL and C# projects. Used by CI where Conan/CMake are not available.
+    /// IDL is compiled via MIDL + tlbimp (Windows SDK tools on windows-latest).
+    /// CuraEngineConnection.dll (C++ / Conan) is sourced from resources/ tracked in git LFS.
     /// </summary>
-    private Target CompileCSharp => _ => _
+    private Target CompileDotnet => _ => _
         .DependsOn(SetBuildInfo)
         .After(Restore)
         .Executes(() =>
         {
             BSpace.Projects.Compile(Variant, true,
-                project => string.Equals(project.Type, "CSharp", StringComparison.OrdinalIgnoreCase));
+                project => string.Equals(project.Type, "CSharp", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(project.Type, "Idl",    StringComparison.OrdinalIgnoreCase));
         });
 
     /// <summary>
@@ -135,7 +137,7 @@ public class Build : NukeBuild
     /// Requires NUGET_FEED_URL and NUGET_AUTH_TOKEN environment variables.
     /// </summary>
     private Target Push => _ => _
-        .DependsOn(SetBuildInfo, CompileCSharp)
+        .DependsOn(SetBuildInfo, CompileDotnet)
         .Executes(() =>
         {
             BSpace.Projects.Deploy(Variant, false, _ => true);
