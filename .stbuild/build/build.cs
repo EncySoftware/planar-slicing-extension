@@ -1,12 +1,14 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using BuildSystem;
 using BuildSystem.Info;
 using BuildSystem.ProjectList;
 using Loggers;
 using Logging;
 using Nuke.Common;
+using Nuke.Common.Utilities.Collections;
 
 namespace stbuild;
 
@@ -16,9 +18,17 @@ namespace stbuild;
 public class Build : NukeBuild
 {
     /// <summary>
-    /// Default target when no target is specified.
+    /// Calling target by default
     /// </summary>
-    public static int Main() => Execute<Build>(x => x.Compile);
+    public static int Main()
+    {
+        var parentDirectory = new DirectoryInfo(EnvironmentInfo.WorkingDirectory)
+            .DescendantsAndSelf(x => x.Parent ?? throw new Exception("Parent directory is null for " + x.FullName))
+            .First(x => x.GetDirectories(".stbuild").Any())
+            .FullName;
+        Environment.SetEnvironmentVariable("root", Path.Combine(parentDirectory, ".stbuild"));
+        return Execute<Build>(x => x.Compile);
+    }
 
     /// <summary>
     /// Build variant. Valid values: Debug_x64, Release_x64.
