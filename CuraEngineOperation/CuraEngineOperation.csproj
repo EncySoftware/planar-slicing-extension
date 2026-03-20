@@ -28,14 +28,20 @@
 
   <!-- Compile-time references and managed project dependencies. -->
   <ItemGroup>
-    <!-- CuraConnectionInterface.dll is produced by the IDL build step (MIDL + tlbimp).
-         Private=false prevents double-copying; runtime copy comes from contentFiles below. -->
-    <Reference Include="$(OutDir)\CuraConnectionInterface.dll">
-      <Private>false</Private>
-    </Reference>
     <ProjectReference Include="..\CuraEngineNetWrapper\CuraEngineNetWrapper.csproj" />
     <ProjectReference Include="..\CuraEngineParametersLibrary\CuraEngineParametersLibrary.csproj" />
   </ItemGroup>
+
+  <!-- CuraConnectionInterface.dll is produced by the IDL build step (MIDL + tlbimp).
+       Placed inside a Target so the build system does not strip it when creating the .copy.csproj for pack.
+       Private=false prevents double-copying; the contentFiles entry below handles deployment. -->
+  <Target Name="AddCuraConnectionInterfaceRef" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Include="$(OutDir)\CuraConnectionInterface.dll">
+        <Private>false</Private>
+      </Reference>
+    </ItemGroup>
+  </Target>
 
   <!-- Package icon and readme (NuGet metadata only, not deployed to extension folder). -->
   <ItemGroup>
