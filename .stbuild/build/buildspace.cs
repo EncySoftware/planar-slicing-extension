@@ -102,8 +102,7 @@ internal class BuildSpaceSettings : SettingsObject
         AddManagerProp("hash_generator", null, HashGeneratorCommon);
         AddManagerProp("restorer", null, RestorerNuget);
         AddManagerProp("cleaner", null, CleanerCommon);
-        AddManagerProp("cleaner_delphi", null, CleanerCommonDelphi);
-        AddManagerProp("test_runner", null, TestRunnerPropsCommon);
+        // AddManagerProp("test_runner", null, TestRunnerPropsCommon);
         AddManagerProp("project_cache", null, ProjectCacheCommon);
         AddManagerProp("package_manager", null, PackageManagerDotnet);
         AddManagerProp("version_manager", null, VersionManagerCommon);
@@ -161,81 +160,78 @@ internal class BuildSpaceSettings : SettingsObject
         Name = "builder_csharp_main" 
     };
 
-    private BuilderMsDelphiProps BuilderDelphiCommon => new()
-    {
-        Name = "builder_delphi_common",
-        BuilderVersion = "23.0",
-        MsBuilderPath = _readerJson.LocalVars["msbuilder_path"],
-        EnvBdsPath = _readerJson.LocalVars["env_bds"],
-        RsVarsPath = _readerJson.LocalVars["rsvars_path"],
-        AutoClean = true,
-        BuildParams = new Dictionary<string, string?>
-        {
-            ["-verbosity"] = "normal",
-            ["-consoleloggerparameters"] = "ErrorsOnly",
-            ["-nologo"] = "true",
-            ["/t:build"] = "true",
-            ["/p:DCC_Hints"] = "false",
-            ["/p:DCC_MapFile"] = "3",
-            ["/p:DCC_AssertionsAtRuntime"] = "true",
-            ["/p:DCC_IOChecking"] = "true",
-            ["/p:DCC_WriteableConstants"] = "true"
-        }
-    };
+    // private BuilderMsDelphiProps BuilderDelphiCommon => new()
+    // {
+    //     Name = "builder_delphi_common",
+    //     BuilderVersion = "23.0",
+    //     MsBuilderPath = _readerJson.LocalVars["msbuilder_path"],
+    //     EnvBdsPath = _readerJson.LocalVars["env_bds"],
+    //     RsVarsPath = _readerJson.LocalVars["rsvars_path"],
+    //     AutoClean = true,
+    //     BuildParams = new Dictionary<string, string?>
+    //     {
+    //         ["-verbosity"] = "normal",
+    //         ["-consoleloggerparameters"] = "ErrorsOnly",
+    //         ["-nologo"] = "true",
+    //         ["/t:build"] = "true",
+    //         ["/p:DCC_Hints"] = "false",
+    //         ["/p:DCC_MapFile"] = "3",
+    //         ["/p:DCC_AssertionsAtRuntime"] = "true",
+    //         ["/p:DCC_IOChecking"] = "true",
+    //         ["/p:DCC_WriteableConstants"] = "true"
+    //     }
+    // };
+    //
+    // private BuilderMsDelphiProps BuilderDelphiRelease
+    // {
+    //     get {
+    //         var bdr = new BuilderMsDelphiProps(BuilderDelphiCommon)
+    //         {
+    //             Name = "builder_delphi_release"
+    //         };
+    //         bdr.BuildParams.Add("/p:DCC_Optimize", "true");
+    //         bdr.BuildParams.Add("/p:DCC_GenerateStackFrames", "true");
+    //         bdr.BuildParams.Add("/p:DCC_DebugInformation", "0");
+    //         bdr.BuildParams.Add("/p:DCC_DebugDCUs", "false");
+    //         bdr.BuildParams.Add("/p:DCC_LocalDebugSymbols", "false");
+    //         bdr.BuildParams.Add("/p:DCC_SymbolReferenceInfo", "0");
+    //         bdr.BuildParams.Add("/p:DCC_IntegerOverflowCheck", "false");
+    //         bdr.BuildParams.Add("/p:DCC_RangeChecking", "false");
+    //         return bdr;
+    //     }
+    // }
+    //
+    // private BuilderMsDelphiProps BuilderDelphiIdl
+    // {
+    //     get {
+    //         var result = new BuilderMsDelphiProps(BuilderDelphiRelease)
+    //         {
+    //             Name = "builder_delphi_midl"
+    //         };
+    //         result.BuildParams.Add("/p:DCC_DefaultNamespace", "IDL;$(DCC_DefaultNamespace)");
+    //         result.BuildParams.Add("/p:DCC_BplOutput", FPath("../CuraEngineConnection/build/debug"));
+    //         result.BuildParams.Add("/p:DCC_DcpOutput", FPath("../CuraEngineConnection/build/debug/dcu"));
+    //         result.BuildParams.Add("/p:DCC_DcuOutput", FPath("../CuraEngineConnection/build/debug/dcu/$native_project:name$"));
+    //         result.BuildParams.Add("/p:DCC_UnitSearchPath", FPath("../CuraEngineConnection/build/debug/dcu"));
+    //         return result;
+    //     }
+    // }
 
-    private BuilderMsDelphiProps BuilderDelphiRelease
-    {
-        get {
-            var bdr = new BuilderMsDelphiProps(BuilderDelphiCommon)
-            {
-                Name = "builder_delphi_release"
-            };
-            bdr.BuildParams.Add("/p:DCC_Optimize", "true");
-            bdr.BuildParams.Add("/p:DCC_GenerateStackFrames", "true");
-            bdr.BuildParams.Add("/p:DCC_DebugInformation", "0");
-            bdr.BuildParams.Add("/p:DCC_DebugDCUs", "false");
-            bdr.BuildParams.Add("/p:DCC_LocalDebugSymbols", "false");
-            bdr.BuildParams.Add("/p:DCC_SymbolReferenceInfo", "0");
-            bdr.BuildParams.Add("/p:DCC_IntegerOverflowCheck", "false");
-            bdr.BuildParams.Add("/p:DCC_RangeChecking", "false");
-            return bdr;
-        }
-    }
-
-    /// <summary>
-    /// Builder object for delphi packages, generated from Idl project
-    /// </summary>
-    private BuilderMsDelphiProps BuilderDelphiIdl
-    {
-        get {
-            var result = new BuilderMsDelphiProps(BuilderDelphiRelease)
-            {
-                Name = "builder_delphi_midl"
-            };
-            result.BuildParams.Add("/p:DCC_DefaultNamespace", "IDL;$(DCC_DefaultNamespace)");
-            result.BuildParams.Add("/p:DCC_BplOutput", FPath("../CuraEngineConnection/build/debug"));
-            result.BuildParams.Add("/p:DCC_DcpOutput", FPath("../CuraEngineConnection/build/debug/dcu"));
-            result.BuildParams.Add("/p:DCC_DcuOutput", FPath("../CuraEngineConnection/build/debug/dcu/$native_project:name$"));
-            result.BuildParams.Add("/p:DCC_UnitSearchPath", FPath("../CuraEngineConnection/build/debug/dcu"));
-            return result;
-        }
-    }
-
-    private TlbGenPasLibImpProps TlbGenPas => new()
-    {
-        Name = "tlb_genpas_main",
-        RunAddNameSpaces = true,
-        EnvBdsPath = _readerJson.LocalVars["env_bds"],
-        GenDoc = false
-    };
-
-    private TlbGenBplThroughPasProps TlbGenBpl => new()
-    {
-        Name = "tlb_genbpl_main",
-        BuilderProps = BuilderDelphiIdl,
-        GenPasProps = TlbGenPas,
-        GenDoc = false
-    };
+    // private TlbGenPasLibImpProps TlbGenPas => new()
+    // {
+    //     Name = "tlb_genpas_main",
+    //     RunAddNameSpaces = true,
+    //     EnvBdsPath = _readerJson.LocalVars["env_bds"],
+    //     GenDoc = false
+    // };
+    //
+    // private TlbGenBplThroughPasProps TlbGenBpl => new()
+    // {
+    //     Name = "tlb_genbpl_main",
+    //     BuilderProps = BuilderDelphiIdl,
+    //     GenPasProps = TlbGenPas,
+    //     GenDoc = false
+    // };
 
     private static TlbGenDotnetDllTlbImpProps TlbGenDotnetDll => new()
     {
@@ -247,8 +243,8 @@ internal class BuildSpaceSettings : SettingsObject
     {
         BuilderVersion = "MIDL_6.00.0366;TLIBIMP_12.16581;TLDotNet_4.8.4084.0",
         Name = "builder_midl_main",
-        TlbGenPasProps = TlbGenPas,
-        TlbGenBplProps = TlbGenBpl,
+        // TlbGenPasProps = TlbGenPas,
+        // TlbGenBplProps = TlbGenBpl,
         PropsTlbGenDotnetDll = TlbGenDotnetDll,
         SearchDirIdl =    FPath($"../CuraEngineConnection/build/{_config}/idl"),
         SearchDirTlb =    FPath($"../CuraEngineConnection/build/{_config}/tlb"),
@@ -260,12 +256,12 @@ internal class BuildSpaceSettings : SettingsObject
         PasFileName = "IDL.$native_project:name$"
     };
 
-    private TestRunnerCommonProps TestRunnerPropsCommon => new()
-    {
-        Name = "test_runner_common",
-        Compile = false,
-        BuilderDprojProps = BuilderDelphiRelease
-    };
+    // private TestRunnerCommonProps TestRunnerPropsCommon => new()
+    // {
+    //     Name = "test_runner_common",
+    //     Compile = false,
+    //     BuilderDprojProps = BuilderDelphiRelease
+    // };
 
     private static ProjectCacheCommonProps ProjectCacheCommon => new()
     {
@@ -283,16 +279,6 @@ internal class BuildSpaceSettings : SettingsObject
     {
         Name = "cleaner_default_main",
         AllBuildResults = true
-    };
-
-    private static CleanerCommonProps CleanerCommonDelphi => new()
-    {
-        Name = "cleaner_delphi_main",
-        AllBuildResults = true,
-        Paths = new Dictionary<string, List<string>>
-        {
-            ["$project:output_dcu$"] = ["*.dcu", "*.res", "*.dfm"]
-        }
     };
 
     private static RestorerNugetProps RestorerNuget => new()
