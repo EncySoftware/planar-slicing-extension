@@ -109,7 +109,7 @@ internal class BuildSpaceSettings : SettingsObject
         AddManagerProp("version_manager", null, VersionManagerCommon);
     }
     
-    private List<StorageInfo> SetStorageInfoFunc(PackageAction packageAction, string packageId, VersionProp? packageVersion)
+    private static List<StorageInfo> SetStorageInfoFunc(PackageAction packageAction, string packageId, VersionProp? packageVersion)
     {
         // add the main feed anyway
         var result = new List<StorageInfo>
@@ -135,13 +135,13 @@ internal class BuildSpaceSettings : SettingsObject
         return result;
     }
 
-    private PackageManagerDotnetProps PackageManagerDotnet => new()
+    private static PackageManagerDotnetProps PackageManagerDotnet => new()
     { 
         Name = "package_manager_dotnet",
         SetStorageInfo = SetStorageInfoFunc
     };
 
-    private VersionManagerCommonProps VersionManagerCommon => new()
+    private static VersionManagerCommonProps VersionManagerCommon => new()
     {
         Name = "version_manager_common",
         DepthSearch = 2,
@@ -264,10 +264,12 @@ internal class BuildSpaceSettings : SettingsObject
     //     BuilderDprojProps = BuilderDelphiRelease
     // };
 
-    private static ProjectCacheCommonProps ProjectCacheCommon => new()
+    private static ProjectCacheNuGetProps ProjectCacheCommon => new()
     {
-        Name = "project_cache_main",
-        TempDir = "./hash"
+        Name = "ProjectCacheNuGet",
+        VersionManagerProps = VersionManagerCommon,
+        PackageManagerProps = PackageManagerDotnet,
+        TempDir =  "./hash"
     };
 
     private static HashGeneratorCommonProps HashGeneratorCommon => new()

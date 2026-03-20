@@ -23,4 +23,6 @@ CuraEngineConnection/conaninfo.txt
 CuraEngineConnectionTest/main/.vs/
 .idea
 .stbuild/.nuke
+.stbuild/logs
+.stbuild/temp
 *.DotSettings.user
