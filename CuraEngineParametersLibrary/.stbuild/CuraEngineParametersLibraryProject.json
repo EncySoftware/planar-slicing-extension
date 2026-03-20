@@ -5,6 +5,5 @@
 		"./*.json",
 		"../*.cs",
 		"../*.csproj"
-	],
-	"package_manager": "package_manager"
+	]
 }

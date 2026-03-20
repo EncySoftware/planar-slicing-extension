@@ -152,7 +152,7 @@ public class Build : NukeBuild
         .DependsOn(SetBuildInfo, CompileDotnet)
         .Executes(() =>
         {
-            BSpace.Projects.Deploy(Variant, false, _ => true);
+            BSpace.Projects.Deploy(Variant, false, project => project.JsonPath.Contains("CuraEngineOperationProject.json"));
         });
 
     /// <summary>
