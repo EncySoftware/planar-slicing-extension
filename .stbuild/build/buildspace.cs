@@ -251,7 +251,7 @@ internal class BuildSpaceSettings : SettingsObject
         IdlOutput =       FPath($"../CuraEngineConnection/build/{_config}/idl"),
         TlbOutput =       FPath($"../CuraEngineConnection/build/{_config}/tlb"),
         DotnetDllOutput = FPath($"../CuraEngineConnection/build/{_config}"),
-        PasOutput =       FPath($"../CuraEngineConnection/build/{_config}/dcu/$native_project:name$"),
+        // PasOutput =       FPath($"../CuraEngineConnection/build/{_config}/dcu/$native_project:name$"),
         HOutput =         FPath($"../CuraEngineConnection/include/utils"),  
         PasFileName = "IDL.$native_project:name$"
     };
