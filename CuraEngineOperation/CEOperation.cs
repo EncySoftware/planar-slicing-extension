@@ -150,11 +150,11 @@ public class CuraEngineOperationSolver :
             } 
         }
     }
-    private int ShowMessageBox(string Msg, TMessageDialogType DlgType, ushort Buttons, TUIButtonType DefaultButton, string ATitle)
+    private void ShowMessageBox(string Msg, TMessageDialogType DlgType, ushort Buttons, TUIButtonType DefaultButton, string ATitle)
     {
         var box = SystemExtensionFactory.GetSingletonExtension<ICAMAPI_UIDialogsHelper>("Extension.UIDialogs.Core");
         ushort buttons = (ushort)TUIButtonTypeFlags.btfOk;
-        return box.Instance.MessageBox(Msg, DlgType, buttons, DefaultButton, ATitle);
+        box.Instance?.MessageBox(Msg, DlgType, buttons, DefaultButton, ATitle);
     }
     
     /// <summary>

@@ -5,5 +5,13 @@
 		"./*.json",
 		"../*.cs",
 		"../*.csproj"
+	],
+	"package_manager": "package_manager_dotnet",
+	"packages": [
+		{
+			"class": "Dotnet",
+			"id": "$env:package_namespace$.CuraEngineOperation",
+			"version": "2.0"
+		}
 	]
 }

@@ -1,0 +1,149 @@
+msgctxt "General parameters label"
+msgstr "Общие параметры"
+
+msgctxt "Manufacturer label"
+msgstr "Производитель"
+
+msgctxt "Printers label"
+msgstr "Принтеры"
+
+msgctxt "Extruders label"
+msgstr "Экструдеры"
+
+msgctxt "Extruders option Extruder"
+msgstr "Экструдер"
+
+msgctxt "Material brand label"
+msgstr "Бренд материала"
+
+msgctxt "Material brand option Generic"
+msgstr "Универсальные"
+
+msgctxt "Materials label"
+msgstr "Материалы"
+
+msgctxt "Variants label"
+msgstr "Варианты"
+
+msgctxt "Profiles label"
+msgstr "Профили"
+
+msgctxt "Profiles option Balanced"
+msgstr "Сбалансированный"
+
+msgctxt "Profiles option Visual"
+msgstr "Визуальный"
+
+msgctxt "Profiles option Engineering"
+msgstr "Проектирование"
+
+msgctxt "Profiles option Draft"
+msgstr "Черновой"
+
+msgctxt "Profiles option Annealing"
+msgstr "Отжиг"
+
+msgctxt "Resolutions label"
+msgstr "Разрешение печати"
+
+msgctxt "Show custom parameters label"
+msgstr "Показать расширенные параметры"
+
+msgctxt "Setting visibility label"
+msgstr "Отображение параметров"
+
+msgctxt "Setting visibility option basic"
+msgstr "Базовые"
+
+msgctxt "Setting visibility option expert"
+msgstr "Экспертные"
+
+msgctxt "Setting visibility option advanced"
+msgstr "Расширенные"
+
+msgctxt "Setting visibility option all"
+msgstr "Все"
+
+msgctxt "Auto tool parameterization label"
+msgstr "Автопараметризация инструмента"
+
+msgctxt "Toolpath parsing mode label"
+msgstr "Режим траектории"
+
+msgctxt "Toolpath parsing mode option Simplified"
+msgstr "Упрощенный"
+
+msgctxt "Toolpath parsing mode option GCode Based"
+msgstr "На основе GCode"
+
+msgctxt "Output additional parameters label"
+msgstr "Вывод дополнительных параметров"
+
+msgctxt "Filament extruding length per frame label"
+msgstr "Длина выдавливания материала на кадр"
+
+msgctxt "Output filament extruding label"
+msgstr "Вывод выдавливания материала"
+
+msgctxt "Set Cura path label"
+msgstr "Задать путь к Cura"
+
+msgctxt "Path to CuraEngine.exe label"
+msgstr "Путь к CuraEngine.exe"
+
+msgctxt "Click_to_open_general_parameters label"
+msgstr "Нажмите на "...", чтобы изменить"
+
+msgctxt "Path_warning_message label"
+msgstr "Не найдена установленная Cura. Задайте путь вручную к CuraEngine.exe. Вкладка параметры -> Задать путь к Cura"
+
+msgctxt "Strength label"
+msgstr "Прочность"
+
+msgctxt "Support label"
+msgstr "Поддержки"
+
+msgctxt "Adhesion label"
+msgstr "Прилипание"
+
+msgctxt "Layer CLData_Command"
+msgstr "Слой"
+
+msgctxt "LineType CLData_Command"
+msgstr "ТипЛинии"
+
+msgctxt "LineWidth CLData_Command"
+msgstr "ШиринаЛинии"
+
+msgctxt "LineThickness CLData_Command"
+msgstr "ТолщинаЛинии"
+
+msgctxt "LineFeedrate CLData_Command"
+msgstr "ПодачаЛинии"
+
+msgctxt "WALL-OUTER CLData_Command"
+msgstr "ВНЕШНЯЯ-СТЕНКА"
+
+msgctxt "WALL-INNER CLData_Command"
+msgstr "ВНУТРЕННЯЯ-СТЕНКА"
+
+msgctxt "SKIN CLData_Command"
+msgstr "ОБОЛОЧКА"
+
+msgctxt "SUPPORT CLData_Command"
+msgstr "ПОДДЕРЖКА"
+
+msgctxt "SKIRT CLData_Command"
+msgstr "ЮБКА"
+
+msgctxt "FILL CLData_Command"
+msgstr "ЗАПОЛНЕНИЕ"
+
+msgctxt "SUPPORT-INTERFACE CLData_Command"
+msgstr "ИНТЕРФЕЙС-ПОДДЕРЖКИ"
+
+msgctxt "PRIME-TOWER CLData_Command"
+msgstr "ПРОБНАЯ-БАШНЯ"
+
+msgctxt "EPerFrame CLData_Command"
+msgstr "E-на-кадр"

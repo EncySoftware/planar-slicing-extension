@@ -9,8 +9,15 @@
     <NoWarn>CS8603</NoWarn>
     <OutDir>../CuraEngineConnection/build/$(Configuration)</OutDir>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="$(OutDir)\CuraConnectionInterface.dll" />
-    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="1.4.1-dev.5" />
+    <!-- Compile-time reference to CuraConnectionInterface.dll produced by the IDL build step.
+         Private=false prevents MSBuild from re-copying it; the package contentFiles entry handles deployment. -->
+    <Reference Include="$(OutDir)\CuraConnectionInterface.dll">
+      <Private>false</Private>
+    </Reference>
+    <!-- CAMAPI is provided by the ENCY host process; exclude runtime assets to avoid bundling them. -->
+    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="2.0.16" PrivateAssets="all" />
   </ItemGroup>
+
 </Project>
