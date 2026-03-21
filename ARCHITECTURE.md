@@ -96,6 +96,7 @@ Files packed as `contentFiles/any/any/`:
 - `NCalc.dll`, `Antlr4.Runtime.Standard.dll` — from `$(OutDir)` (restored by NCalcSync package)
 - `CuraEngineConnection.dll` — from `resources/` (git LFS, C++ / Conan)
 - `CuraEngineOperation.settings.json`, `CuraEngineToolpath_ExtOp.xml`, `CuraSettings.json`
+- `CuraPath_icon.png` — from `CuraEngineOperation/` (also used as `PackageIcon` in NuGet metadata)
 - `UltimakerCuraPlugin_icon.png`, `UserLocalization/en-US.po`, `UserLocalization/ru_RU.po` — from `resources/`
 
 ### Zero runtime NuGet dependencies

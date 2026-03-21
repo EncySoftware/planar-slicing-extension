@@ -49,6 +49,13 @@
     <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <!-- Package icon deployed to the ENCY extension folder alongside the main DLL. -->
+  <ItemGroup>
+    <None Include="CuraPath_icon.png" Pack="true" PackagePath="contentFiles/any/any/">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <!-- Extension descriptor files: deployed alongside the main DLL in the ENCY extension folder. -->
   <ItemGroup>
     <None Include="CuraEngineToolpath_ExtOp.xml" Pack="true" PackagePath="contentFiles/any/any/">
