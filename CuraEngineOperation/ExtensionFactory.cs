@@ -65,7 +65,9 @@ public class ExtensionFactory : IExtensionFactory
         string assemblyLocation = Assembly.GetExecutingAssembly().Location;
         string OperationXMlName = "CuraEngineToolpath_ExtOp.xml";
         string pathToOperationXML = Path.GetDirectoryName(assemblyLocation) + "\\" + OperationXMlName;
-        string pathToUserOperationsList = Context.Paths.TryUnfoldPath(@"$(OPERATIONS_FOLDER)\UserOperationsList.xml");
+        string operationsFolder = Context.Paths.TryUnfoldPath(@"$(OPERATIONS_FOLDER)");
+        Directory.CreateDirectory(operationsFolder);
+        string pathToUserOperationsList = Path.Combine(operationsFolder, "UserOperationsList.xml");
         if (File.Exists(pathToUserOperationsList))
         {
             try
