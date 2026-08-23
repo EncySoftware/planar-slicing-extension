@@ -16,7 +16,7 @@
     <Reference Include="$(OutDir)\CuraEngineParametersLibrary.dll" />
     <Reference Include="$(OutDir)\CuraEngineNetWrapper.dll" />
 
-    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="2.0.16" />
+    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="2.0.24-dev.12" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NCalcSync" Version="3.12.0" />
