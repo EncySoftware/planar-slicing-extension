@@ -23,7 +23,7 @@
   <!-- CAMAPI is provided by the ENCY host process; PrivateAssets=all keeps it out of the .nuspec
        so consumers do not pull ENCY assemblies when restoring this package. -->
   <ItemGroup>
-    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="2.0.16" PrivateAssets="all" />
+    <PackageReference Include="EncySoftware.CAMAPI.SDK.Net" Version="2.0.24" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- Compile-time references and managed project dependencies. -->
