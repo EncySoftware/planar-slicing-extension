@@ -18,6 +18,7 @@ lfs/*
 **/bin/
 **/obj/
 hooks/*
+CuraEngineConnection/include/utils/CuraConnectionInterface_i.c
 CuraEngineConnection/conanbuildinfo.txt
 CuraEngineConnection/conaninfo.txt
 CuraEngineConnectionTest/main/.vs/
