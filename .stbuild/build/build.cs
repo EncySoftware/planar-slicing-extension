@@ -5,8 +5,9 @@ using System.Linq;
 using BuildSystem;
 using BuildSystem.Info;
 using BuildSystem.ProjectList;
-using Loggers;
+using BuildSystem.ProjectList.Model;
 using Logging;
+using Utils;
 using LoggingLevel = Logging.LogLevel;
 using Nuke.Common;
 using Nuke.Common.Utilities.Collections;
@@ -72,9 +73,7 @@ public class Build : NukeBuild
     private IBuildSpace BSpace => _buildSpace ??= InitBuildSpace();
 
     private IBuildSpace InitBuildSpace() {
-        var localJsonFile = Path.Combine(RootDirectory, $"buildspace.{BuildInfo.RunParams[RunInfo.Local]}.json");
-        var bsJsonFile = Path.Combine(RootDirectory, "buildspace.json");
-        var config = new BuildSpaceSettings(Logger, [bsJsonFile, localJsonFile], Variant);
+        var config = new BuildSpaceSettings(Logger, RootDirectory.Parent, Variant);
         return new BuildSpaceCommon(Logger, RootDirectory + "//temp", SettingsReaderType.Object, config);
     }
 

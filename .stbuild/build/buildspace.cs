@@ -9,39 +9,33 @@ using BuildSystem.Core.HashGenerator;
 using BuildSystem.Core.PackageManager;
 using BuildSystem.Core.ProjectCache;
 using BuildSystem.Core.TestRunner;
-using BuildSystem.Core.TlbGenBpl;
 using BuildSystem.Core.TlbGenDotnetDll;
 using BuildSystem.Core.TlbGenPas;
 using BuildSystem.Core.VersionManager;
 using BuildSystem.ManagerObject.Interfaces;
 using BuildSystem.ManagerObject.Interfaces.Package;
 using BuildSystem.ManagerObject.Interfaces.Variants;
+using BuildSystem;
 using BuildSystem.ProjectList;
-using BuildSystem.ProjectList.Restorer;
 using Logging;
 using Nuke.Common;
 
 namespace stbuild;
 
 /// <inheritdoc />
-internal class BuildSpaceSettings : SettingsObject
+internal class BuildSpaceSettings : BuildSpaceSettingsCommon
 {
     private readonly string? _config;
     private static string GitBranch => Environment.GetEnvironmentVariable("GITHUB_REF_NAME") + "";
 
-    private readonly ReaderJson _readerJson;
-
     /// <inheritdoc />
-    public BuildSpaceSettings(ILogger logger, string[] configFiles, string variant)
+    public BuildSpaceSettings(ILogger logger, string rootDirectory, string variant, string[]? configFiles = null)
+        : base(logger, rootDirectory, configFiles)
     {
-        _readerJson = new ReaderJson(logger);
-        _readerJson.ReadRules(configFiles);
-        ReaderLocalVars = _readerJson.LocalVars;
-        ReaderDefines = _readerJson.Defines;
-        Projects = GetProjectList(configFiles);
         ProjectListProps = new ProjectListCommonProps(logger)
         {
-            SetStorageInfo = SetStorageInfoFunc
+            SetStorageInfo = SetStorageInfoFunc,
+            GetNextVersion = GetNextVersion.FromRemotePackages
         };
         _config = BuildUtils.Configuration(variant);
         RegisterBuildSystemObjects();
@@ -50,30 +44,6 @@ internal class BuildSpaceSettings : SettingsObject
     /// <summary> Returns full path </summary>
     /// <param name="relPath"> Input relative path </param>
     private static string FPath(string relPath) => Path.GetFullPath(Path.Combine(NukeBuild.RootDirectory, relPath));
-
-    /// <summary>
-    /// Reads a list of projects from configFiles
-    /// </summary>
-    /// <param name="configFiles"> Json configuration file paths </param>
-    private HashSet<string> GetProjectList(string[] configFiles)
-    {
-        var resultList = new HashSet<string>();
-        foreach (var config in configFiles)
-        {
-            if (!File.Exists(config)) 
-                continue;
-            var configDir = Path.GetDirectoryName(config) + "";
-            var projects = BuildUtils.GetJsonArrayValue(config, "projects");
-            foreach (var project in projects)
-            {
-                var projPath = Path.GetFullPath(Path.Combine(configDir, project));
-                if (File.Exists(projPath))
-                    resultList.Add(projPath);
-            }
-            
-        }
-        return resultList;
-    }
 
     /// <summary>
     /// Register Build System control objects
@@ -101,7 +71,6 @@ internal class BuildSpaceSettings : SettingsObject
         AddManagerProp("builder_csharp", null, BuilderDotNet);
         AddManagerProp("builder_idl", null, BuilderIdl);
         AddManagerProp("hash_generator", null, HashGeneratorCommon);
-        AddManagerProp("restorer", null, RestorerNuget);
         AddManagerProp("cleaner", null, CleanerCommon);
         // AddManagerProp("test_runner", null, TestRunnerPropsCommon);
         AddManagerProp("project_cache", null, ProjectCacheCommon);
@@ -284,9 +253,4 @@ internal class BuildSpaceSettings : SettingsObject
         AllBuildResults = true
     };
 
-    private static RestorerNugetProps RestorerNuget => new()
-    { 
-        Name = "restorer_main",
-        DepsProp = []
-    };
 }
